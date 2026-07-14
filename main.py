@@ -12,9 +12,9 @@ dims = 5
 mbp = MovingPeaksBenchmark(dims=dims, num_peaks=1, pos_bounds=(0,100))
 mbp_bounds = [(0, 100) for _ in range(dims)]
 
-pso = PSO(num_particles=30, search_bounds=mbp_bounds, objective=mbp.evaluate, is_minimization=False)
+pso = PSO(num_particles=30, search_bounds=mbp_bounds, objective=mbp.evaluate, is_minimization=False, quantum_proportion=0.5)
 
-best_position, history = pso.optimize(num_iterations=1000, patience=1001, neighborhood_size=3, dynamic_env=mbp, change_interval=200)
+best_position, history = pso.optimize(num_iterations=1000, neighborhood_size=3, dynamic_env=mbp, change_interval=200)
 
 plot_fitness(history)
 plot_diversity(history)

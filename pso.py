@@ -5,11 +5,15 @@ import random
 from particle import Particle
 
 class PSO:
-    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=1.496180, c2=1.496180, is_minimization=True):
+    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=1.496180, c2=1.496180, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0):
         
         self.particles = []
-        for i in range(num_particles):
-            self.particles.append(Particle(search_bounds=search_bounds))
+        num_quantum = int(num_particles * quantum_proportion)
+        num_neutral = num_particles - num_quantum
+        for i in range(num_neutral): # initialize neutral particles
+            self.particles.append(Particle(search_bounds=search_bounds, is_quantum=False))
+        for i in range(num_quantum): # initialize quantum particles
+            self.particles.append(Particle(search_bounds=search_bounds, is_quantum=True))
 
         self.search_bounds = search_bounds
         self.objective = objective
@@ -28,7 +32,9 @@ class PSO:
         self.global_best_position = None
         self.w, self.c1, self.c2 = w, c1, c2
 
-    def optimize(self, num_iterations, patience, neighborhood_size, dynamic_env=None, change_interval=200):
+        self.quantum_radius = quantum_radius
+
+    def optimize(self, num_iterations, neighborhood_size, dynamic_env=None, change_interval=200):
         history = {
             'best_fitness': [],
             'avg_fitness': [],
@@ -54,7 +60,6 @@ class PSO:
                 self.global_best_fitness = fitness
                 
         # Main PSO Loop
-        no_improvement_count = 0
         for iteration in range(num_iterations):
             print(f"Iteration {iteration + 1}/{num_iterations}")
             current_best_fitness = self.global_best_fitness
@@ -74,38 +79,47 @@ class PSO:
                             self.global_best_position = particle.best_position.copy()
                             self.global_best_fitness = particle.best_fitness
 
-            # Environment Change Trigger
-            if dynamic_env is not None and iteration > 0 and iteration % change_interval == 0: #TODO: expand this to include above code and turn above code into sentinel check
+            # --- Environment Change Trigger ---
+            if dynamic_env is not None and iteration > 0 and iteration % change_interval == 0:
                 print(f"Environment has changed!")
                 dynamic_env.change_environment()
             
             # Update velocities using local best
             for i in range(len(self.particles)):
-                # Find neighbor indices of current particle
-                neighbor_indices = [(i + j) % len(self.particles) for j in range(-(neighborhood_size // 2), (neighborhood_size // 2) + 1)]
+                # Neutral particle update (standard velocity-position update)
+                if self.particles[i].is_quantum == False:
+                    # Find neighbor indices of current particle
+                    neighbor_indices = [(i + j) % len(self.particles) for j in range(-(neighborhood_size // 2), (neighborhood_size // 2) + 1)]
 
-                # Find which local particle has the best personal fitness
-                best_neighbor_idx = neighbor_indices[0]
-                best_neighbor_fitness = float('inf') if self.is_minimization else float('-inf')
-                for idx in neighbor_indices:
-                    if self.better_than(self.particles[idx].best_fitness, best_neighbor_fitness):
-                        best_neighbor_fitness = self.particles[idx].best_fitness
-                        best_neighbor_idx = idx
-                local_best_position = self.particles[best_neighbor_idx].best_position
+                    # Find which local particle has the best personal fitness
+                    best_neighbor_idx = neighbor_indices[0]
+                    best_neighbor_fitness = float('inf') if self.is_minimization else float('-inf')
+                    for idx in neighbor_indices:
+                        if self.better_than(self.particles[idx].best_fitness, best_neighbor_fitness):
+                            best_neighbor_fitness = self.particles[idx].best_fitness
+                            best_neighbor_idx = idx
+                    local_best_position = self.particles[best_neighbor_idx].best_position
 
-                # Update Velocity
-                r1 = np.random.rand(len(self.particles[i].position))
-                r2 = np.random.rand(len(self.particles[i].position))
+                    # Update Velocity
+                    r1 = np.random.rand(len(self.particles[i].position))
+                    r2 = np.random.rand(len(self.particles[i].position))
 
-                cognitive = self.c1 * r1 * (self.particles[i].best_position - self.particles[i].position)
-                social = self.c2 * r2 * (local_best_position - self.particles[i].position) # uses lbest
+                    cognitive = self.c1 * r1 * (self.particles[i].best_position - self.particles[i].position)
+                    social = self.c2 * r2 * (local_best_position - self.particles[i].position) # uses lbest
 
-                new_velocity = (self.w * self.particles[i].velocity + cognitive + social)
-                
-                self.particles[i].velocity = np.clip(new_velocity, self.v_min, self.v_max) # Apply velocity clamping
+                    new_velocity = (self.w * self.particles[i].velocity + cognitive + social)
+                    
+                    self.particles[i].velocity = np.clip(new_velocity, self.v_min, self.v_max) # Apply velocity clamping
 
-                # Update Position
-                self.particles[i].position = self.particles[i].position + self.particles[i].velocity
+                    # Update Position
+                    self.particles[i].position = self.particles[i].position + self.particles[i].velocity
+
+                # Quantum particle update
+                else:
+                    y_hat = self.global_best_position.copy()
+                    r_cloud = self.quantum_radius
+                    dims = len(self.search_bounds)
+                    self.particles[i].position = np.random.uniform(low=(y_hat-r_cloud), high=(y_hat+r_cloud), size=dims)
 
                 position = self.particles[i].get_position()
                 fitness = self.objective(position)
@@ -133,21 +147,6 @@ class PSO:
             positions = np.array([p.position for p in self.particles])
             swarm_spread = np.mean(np.std(positions, axis=0))
             history['diversity'].append(swarm_spread)
-
-            # Early Stopping (fitness stagnation)
-            if (self.global_best_fitness - current_best_fitness) < 1e-4:
-                no_improvement_count += 1
-            else:
-                no_improvement_count = 0
-
-            if no_improvement_count >= patience:
-                print("Fitness improvement has stagnated, stopping early!")
-                break
-
-            # Early Stopping (particle distance)
-            # if swarm_spread < 1e-2:
-            #     print("Swarm has converged, stopping early!")
-            #     break
 
         best_position = self.global_best_position
         return best_position, history

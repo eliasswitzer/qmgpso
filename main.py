@@ -12,14 +12,29 @@ dims = 5
 mbp = MovingPeaksBenchmark(dims=dims, num_peaks=1, pos_bounds=(0,100))
 mbp_bounds = [(0, 100) for _ in range(dims)]
 
+num_iterations = 1000
+change_interval = 200
+
 pso = PSO(num_particles=30, search_bounds=mbp_bounds, objective=mbp.evaluate, is_minimization=False, quantum_proportion=0.5)
 
-best_position, history = pso.optimize(num_iterations=1000, neighborhood_size=3, dynamic_env=mbp, change_interval=200)
+# Initialize PSO particle positions and attractors
+pso.initialize()
 
-plot_fitness(history)
-plot_diversity(history)
+# Main PSO Loop
+for iteration in range(num_iterations):
+    print(f"Iteration {iteration + 1}/{num_iterations}")
 
-print("Best architecture found: ", best_position)
-print(mbp.peak_positions)
-print(mbp.peak_heights)
-print(mbp.peak_widths)
+    # --- Environment Change Trigger ---
+    if iteration > 0 and iteration % change_interval == 0:
+        print(f"Environment has changed!")
+        mbp.change_environment()
+
+    pso.step(neighborhood_size=3)
+
+plot_fitness(pso.history)
+plot_diversity(pso.history)
+
+print("Best architecture found:", pso.global_best_position)
+print("Peak Positions:", mbp.peak_positions)
+print("Peak Heights", mbp.peak_heights)
+print("Peak Widths", mbp.peak_widths)

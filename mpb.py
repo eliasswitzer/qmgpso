@@ -16,9 +16,6 @@ class MovingPeaksBenchmark:
         self.peak_positions = np.random.uniform(pos_bounds[0], pos_bounds[1], (num_peaks, dims))
         self.peak_heights = np.random.uniform(height_bounds[0], height_bounds[1], num_peaks)
         self.peak_widths = np.random.uniform(width_bounds[0], width_bounds[1], num_peaks)
-        print(self.peak_positions)
-        print(self.peak_heights)
-        print(self.peak_widths)
 
         # Initialize random peak velocities with length s
         velocities_raw = np.random.uniform(-1,1,(num_peaks, dims))
@@ -58,7 +55,3 @@ class MovingPeaksBenchmark:
             self.peak_widths[i] += sigma * self.w
             self.peak_heights[i] = np.clip(self.peak_heights[i], self.height_bounds[0], self.height_bounds[1])
             self.peak_widths[i] = np.clip(self.peak_widths[i], self.width_bounds[0], self.width_bounds[1])
-
-            print(self.peak_positions)
-            print(self.peak_heights)
-            print(self.peak_widths)

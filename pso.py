@@ -59,15 +59,23 @@ class PSO:
             print(f"Iteration {iteration + 1}/{num_iterations}")
             current_best_fitness = self.global_best_fitness
 
-            # Re-evaluate personal bests in case they have changed
-            self.global_best_fitness = float('inf') if self.is_minimization else float('-inf')
-            for particle in self.particles:
-                particle.best_fitness = self.objective(particle.best_position)
-                if self.better_than(particle.best_fitness, self.global_best_fitness):
-                    self.global_best_position = particle.best_position.copy()
-                    self.global_best_fitness = particle.best_fitness
+            # Reactive change detection
+            if iteration > 0 and self.global_best_position is not None:
+                # Evaluate objective function at last known global best position
+                current_global_fitness = self.objective(self.global_best_position)
 
-            if dynamic_env is not None and iteration > 0 and iteration % change_interval == 0:
+                # Check if value is different from last iteration
+                if abs(current_global_fitness - self.global_best_fitness) > 1e-8:
+                    # If so, re-evaluate personal bests of each particle
+                    self.global_best_fitness = float('inf') if self.is_minimization else float('-inf')
+                    for particle in self.particles:
+                        particle.best_fitness = self.objective(particle.best_position)
+                        if self.better_than(particle.best_fitness, self.global_best_fitness):
+                            self.global_best_position = particle.best_position.copy()
+                            self.global_best_fitness = particle.best_fitness
+
+            # Environment Change Trigger
+            if dynamic_env is not None and iteration > 0 and iteration % change_interval == 0: #TODO: expand this to include above code and turn above code into sentinel check
                 print(f"Environment has changed!")
                 dynamic_env.change_environment()
             

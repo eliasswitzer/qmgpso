@@ -6,7 +6,7 @@ from functions import sphere_function, rosenbrock_function, ackley_function, ras
 from mpb import MovingPeaksBenchmark
 from visualizations import plot_fitness, plot_diversity
 
-np.random.seed(100)
+np.random.seed(50)
 
 dims = 5
 mbp = MovingPeaksBenchmark(dims=dims, num_peaks=1, pos_bounds=(0,100))
@@ -20,3 +20,6 @@ plot_fitness(history)
 plot_diversity(history)
 
 print("Best architecture found: ", best_position)
+print(mbp.peak_positions)
+print(mbp.peak_heights)
+print(mbp.peak_widths)

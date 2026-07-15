@@ -5,7 +5,7 @@ import random
 from particle import Particle
 
 class PSO:
-    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=1.496180, c2=1.496180, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0):
+    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=1.496180, c2=1.496180, neighborhood_size=3, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0):
         self.iteration = 0
         self.particles = []
         num_quantum = int(num_particles * quantum_proportion)
@@ -31,6 +31,7 @@ class PSO:
 
         self.global_best_position = None
         self.w, self.c1, self.c2 = w, c1, c2
+        self.neighborhood_size = neighborhood_size
 
         self.quantum_radius = quantum_radius
 
@@ -59,7 +60,7 @@ class PSO:
                 self.global_best_position = self.particles[i].position.copy()
                 self.global_best_fitness = fitness
 
-    def step(self, neighborhood_size):
+    def step(self):
         # Reactive change detection
         if self.iteration > 0 and self.global_best_position is not None:
             # Evaluate objective function at last known global best position
@@ -80,7 +81,7 @@ class PSO:
             # Neutral particle update (standard velocity-position update)
             if self.particles[i].is_quantum == False:
                 # Find neighbor indices of current particle
-                neighbor_indices = [(i + j) % len(self.particles) for j in range(-(neighborhood_size // 2), (neighborhood_size // 2) + 1)]
+                neighbor_indices = [(i + j) % len(self.particles) for j in range(-(self.neighborhood_size // 2), (self.neighborhood_size // 2) + 1)]
 
                 # Find which local particle has the best personal fitness
                 best_neighbor_idx = neighbor_indices[0]

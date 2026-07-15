@@ -6,7 +6,7 @@ from functions import sphere_function, rosenbrock_function, ackley_function, ras
 from mpb import MovingPeaksBenchmark
 from visualizations import plot_fitness, plot_diversity
 
-np.random.seed(50)
+np.random.seed(100)
 
 dims = 5
 mbp = MovingPeaksBenchmark(dims=dims, num_peaks=1, pos_bounds=(0,100))
@@ -15,7 +15,7 @@ mbp_bounds = [(0, 100) for _ in range(dims)]
 num_iterations = 1000
 change_interval = 200
 
-pso = PSO(num_particles=30, search_bounds=mbp_bounds, objective=mbp.evaluate, is_minimization=False, quantum_proportion=0.5)
+pso = PSO(num_particles=30, search_bounds=mbp_bounds, objective=mbp.evaluate, is_minimization=False, quantum_proportion=0.5, quantum_radius=2)
 
 # Initialize PSO particle positions and attractors
 pso.initialize()
@@ -29,7 +29,7 @@ for iteration in range(num_iterations):
         print(f"Environment has changed!")
         mbp.change_environment()
 
-    pso.step(neighborhood_size=3)
+    pso.step()
 
 plot_fitness(pso.history)
 plot_diversity(pso.history)

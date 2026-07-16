@@ -1,11 +1,10 @@
 import numpy as np
 import operator
-import random
 
 from particle import Particle
 
-class PSO:
-    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=1.496180, c2=1.496180, neighborhood_size=3, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0):
+class QPSO:
+    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0):
         self.iteration = 0
         self.particles = []
         num_quantum = int(num_particles * quantum_proportion)
@@ -26,11 +25,8 @@ class PSO:
             self.better_than = operator.gt
             self.global_best_fitness = float('-inf')
 
-        self.v_max = np.array([(high - low) * 0.2 for low, high in search_bounds])
-        self.v_min = -self.v_max
-
         self.global_best_position = None
-        self.w, self.c1, self.c2 = w, c1, c2
+        self.w, self.c1, self.c2, self.c3 = w, c1, c2, c3
         self.neighborhood_size = neighborhood_size
 
         self.quantum_radius = quantum_radius
@@ -60,7 +56,7 @@ class PSO:
                 self.global_best_position = self.particles[i].position.copy()
                 self.global_best_fitness = fitness
 
-    def step(self):
+    def step(self, archive=None, tournament_size=3):
         # Reactive change detection
         if self.iteration > 0 and self.global_best_position is not None:
             # Evaluate objective function at last known global best position
@@ -95,13 +91,19 @@ class PSO:
                 # Update Velocity
                 r1 = np.random.rand(len(self.particles[i].position))
                 r2 = np.random.rand(len(self.particles[i].position))
+                r3 = np.random.rand(len(self.particles[i].position))
 
                 cognitive = self.c1 * r1 * (self.particles[i].best_position - self.particles[i].position)
                 social = self.c2 * r2 * (local_best_position - self.particles[i].position) # uses lbest
 
-                new_velocity = (self.w * self.particles[i].velocity + cognitive + social)
-                
-                self.particles[i].velocity = np.clip(new_velocity, self.v_min, self.v_max) # Apply velocity clamping
+                if archive is not None and len(archive) > 0:
+                    archive_guide = archive.tournament_select(tournament_size=tournament_size)
+                    # TODO: add balance coefficient
+                    archive_pull = self.c3 * r3 * (archive_guide - self.particles[i].position)
+                else:
+                    archive_pull = 0.0
+
+                self.particles[i].velocity = (self.w * self.particles[i].velocity) + cognitive + social + archive_pull
 
                 # Update Position
                 self.particles[i].position = self.particles[i].position + self.particles[i].velocity

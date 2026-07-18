@@ -6,13 +6,13 @@ from problems import FDA1, ZJZ
 from visualizations import plot_pareto_front, plot_archive_size, plot_pareto_front_history
 
 # Set Random Seed
-seed = 50
+seed = 100
 np.random.seed(seed)
 random.seed(seed)
 
 # Initialize DMOP (Dynamic Multi Objective Problem)
-dims = 5
-problem = FDA1(dims=dims, tau_T=25, n_T=10)
+dims = 20
+problem = ZJZ(dims=dims, tau_T=50, n_T=10)
 num_iterations = 1000
 
 qmgpso = QMGPSO(num_particles=30, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0.5, quantum_radius=2)

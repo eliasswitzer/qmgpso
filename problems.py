@@ -33,7 +33,10 @@ class DynamicProblem(ABC):
         pass
 
 class FDA1(DynamicProblem):
-    """A benchmark multi-objective problem proposed by Farina et al., 2004"""
+    """
+        A benchmark multi-objective problem proposed by Farina et al., 2004
+        Type I Dynamic Problem (POS changes but POF remains static)
+    """
     def __init__(self, dims=20, tau_T=10, n_T=10):
         search_bounds = [(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(dims-1)]
         super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
@@ -61,12 +64,47 @@ class FDA1(DynamicProblem):
         g = 1.0 + np.sum((x_rest - G)**2)
 
         f1 = x1
-        f2 = 1 - np.sqrt(f1/max(g,1e-9)) # prevents division by 0
+        f2 = 1.0 - np.sqrt(f1/max(g,1e-9)) # prevents division by 0
 
         return np.array([f1, f2])
 
 class ZJZ(DynamicProblem):
-    pass
+    """
+        A benchmark multi-objective problem proposed by Zhou et al., 2006
+        Type II Dynamic Problem (Both POS and POF change)
+    """
+    def __init__(self, dims=20, tau_T=10, n_T=10):
+        search_bounds = [(0.0, 1.0)] + [(-1.0, 2.0) for _ in range(dims-1)]
+        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self) -> bool:
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+    
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        x1 = x_clamped[0]
+        x_rest = x_clamped[1:]
+
+        G = np.sin(0.5 * np.pi * self.t)
+        H = 1.5 + G
+
+        g = 1.0 + np.sum((x_rest + G - (x1**H))**2)
+
+        f1 = x1
+        f2 = 1.0 - (f1/max(g,1e-9))**H # prevents division by 0
+
+        return np.array([f1, f2])
 
 class F5(DynamicProblem):
     pass

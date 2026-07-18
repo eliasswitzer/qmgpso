@@ -45,6 +45,7 @@ def crowding_distance(fitnesses):
 
 
 class Archive:
+    """Stores solutions and ensures that all stored solutions are non-dominated (i.e. each solution represents a good trade-off between objectives)"""
     def __init__(self, is_minimization, max_size=None):
         self.is_minimization = is_minimization
         self.max_size = max_size
@@ -78,9 +79,10 @@ class Archive:
             distances = crowding_distance(self.fitnesses)
             drop_idx = int(np.argmin(distances)) # min distance indicates most crowded
             del self.positions[drop_idx]
-            del self.positions[drop_idx]
+            del self.fitnesses[drop_idx]
 
     def random_member(self):
+        """Return the position of a random member of the archive (used in tournament selection)"""
         if not self.positions:
             return None
         return self.positions[random.randrange(len(self.positions))]
@@ -90,14 +92,15 @@ class Archive:
         Picks an archive guide via tournament selection and which has the largest crowding distance
         """
         n = len(self.positions)
+        # Defaults if there are not enough stored solutions for 3-tourament selection
         if n == 0:
             return None
         if n == 1:
-            return self.positions[0]
+            return self.positions[0] 
         
         distances = crowding_distance(self.fitnesses)
-        k = min(tournament_size, n)
-        candidate_indices = random.sample(range(n), k)
+        k = min(tournament_size, n) # chooses 2 or 3 based on amount of solutions in archive
+        candidate_indices = random.sample(range(n), k) # choose random indices
         best_idx = max(candidate_indices, key=lambda idx: distances[idx])
         return self.positions[best_idx]
 

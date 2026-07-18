@@ -4,6 +4,9 @@ import operator
 from particle import Particle
 
 class QPSO:
+    """
+    Runs single-objective QPSO
+    """
     def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0):
         self.iteration = 0
         self.particles = []
@@ -38,6 +41,7 @@ class QPSO:
         }
 
     def initialize(self):
+        """Initializes n particles, their position, velocity and personal best fitnesses"""
         # Initial Evaluation
         print("Evaluating Initial Population")
         for i in range(len(self.particles)):
@@ -57,6 +61,7 @@ class QPSO:
                 self.global_best_fitness = fitness
 
     def step(self, archive=None, tournament_size=3):
+        """Runs one optimization step, where the algorithm first reevaluates best positions if an environment change occurs, then updates velocities and positions. Includes neutral and quantum particle updates."""
         # Reactive change detection
         if self.iteration > 0 and self.global_best_position is not None:
             # Evaluate objective function at last known global best position
@@ -94,12 +99,11 @@ class QPSO:
                 r3 = np.random.rand(len(self.particles[i].position))
 
                 cognitive = self.c1 * r1 * (self.particles[i].best_position - self.particles[i].position)
-                social = self.c2 * r2 * (local_best_position - self.particles[i].position) # uses lbest
+                social = self.particles[i].l * self.c2 * r2 * (local_best_position - self.particles[i].position) # uses lbest
 
                 if archive is not None and len(archive) > 0:
                     archive_guide = archive.tournament_select(tournament_size=tournament_size)
-                    # TODO: add balance coefficient
-                    archive_pull = self.c3 * r3 * (archive_guide - self.particles[i].position)
+                    archive_pull = (1 - self.particles[i].l) * self.c3 * r3 * (archive_guide - self.particles[i].position)
                 else:
                     archive_pull = 0.0
 

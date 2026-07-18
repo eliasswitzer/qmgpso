@@ -2,16 +2,17 @@ import numpy as np
 import random
 
 from qmgpso import QMGPSO
-from problems import MovingPeaksBenchmark, FDA1, ZJZ
+from problems import FDA1, ZJZ
+from visualizations import plot_pareto_front, plot_archive_size, plot_pareto_front_history
 
-seed = 100
+# Set Random Seed
+seed = 50
 np.random.seed(seed)
 random.seed(seed)
 
+# Initialize DMOP (Dynamic Multi Objective Problem)
 dims = 5
-# problem = MovingPeaksBenchmark(dims=dims, num_peaks=1, pos_bounds=(0,100))
 problem = FDA1(dims=dims, tau_T=25, n_T=10)
-
 num_iterations = 1000
 
 qmgpso = QMGPSO(num_particles=30, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0.5, quantum_radius=2)
@@ -29,3 +30,10 @@ for iteration in range(num_iterations):
     if problem.has_changed():
         print("Environment has changed!")
         problem.handle_change()
+
+# Show plots
+plot_pareto_front(qmgpso.archive)
+plot_archive_size(qmgpso.history)
+plot_pareto_front_history(qmgpso.history)
+
+# TODO: METRICS (accuracy, stability, etc.) and more VISUALS

@@ -15,7 +15,7 @@ dims = 20
 problem = ZJZ(dims=dims, tau_T=50, n_T=10)
 num_iterations = 1000
 
-qmgpso = QMGPSO(num_particles=30, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0.5, quantum_radius=2)
+qmgpso = QMGPSO(num_particles=30, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0.5, quantum_radius=2, archive_strategy="hd", archive_size=50)
 
 # Initialize PSO particle positions and attractors
 qmgpso.initialize()
@@ -30,6 +30,7 @@ for iteration in range(num_iterations):
     if problem.has_changed():
         print("Environment has changed!")
         problem.handle_change()
+        qmgpso.handle_change()
 
 # Show plots
 plot_pareto_front(qmgpso.archive)

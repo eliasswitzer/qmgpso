@@ -5,9 +5,10 @@ class QMGPSO:
     """
     Quantum Multi-Guide Particle Swarm Optimization, incoporating one QPSO subswarm per objective function and an archive enforcing Pareto-dominance for dynamic multi-objective optimization
     """
-    def __init__(self, num_particles, search_bounds, objective, num_objectives, is_minimization, w=0.6, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, quantum_proportion=0.5, quantum_radius=1.0, archive_size=None):
+    def __init__(self, num_particles, search_bounds, objective, num_objectives, is_minimization, w=0.6, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, quantum_proportion=0.5, quantum_radius=1.0, archive_strategy="hd", archive_size=None):
         self.objective = objective
         self.num_objectives = num_objectives
+        self.search_bounds = search_bounds
         if isinstance(is_minimization, bool):
             self.is_minimization = [is_minimization] * num_objectives
         else:
@@ -33,6 +34,8 @@ class QMGPSO:
             'archive_snapshots': []
         }
 
+        self.archive_strategy=archive_strategy
+
     def initialize(self):
         """Initialize each subswarm (calls subswarm initialize method to set initial positions, velocities, etc.) and add initial positions to archive"""
         for subswarm in self.subswarms:
@@ -52,4 +55,21 @@ class QMGPSO:
         for subswarm in self.subswarms:
             for particle in subswarm.particles:
                 full_fitness = self.objective(particle.position)
-                self.archive.add_solution(particle.best_position, full_fitness)
+                self.archive.add_solution(particle.position, full_fitness)
+
+    def handle_change(self):
+        """Applies chosen archive management approach upon environment change"""
+        if self.archive_strategy == "cl":
+            self.archive.clear()
+        elif self.archive_strategy == "re":
+            self.archive.reevaluate(self.objective)
+        elif self.archive_strategy == "h2":
+            self.archive.local_search(self.objective, self.search_bounds, step_size=0.02)
+        elif self.archive_strategy == "h5":
+            self.archive.local_search(self.objective, self.search_bounds, step_size=0.05)
+        elif self.archive_strategy == "h10":
+            self.archive.local_search(self.objective, self.search_bounds, step_size=0.10)
+        elif self.archive_strategy == "hd":
+            self.archive.local_search(self.objective, self.search_bounds)
+        else:
+            pass

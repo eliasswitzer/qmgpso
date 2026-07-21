@@ -103,6 +103,54 @@ class Archive:
         candidate_indices = random.sample(range(n), k) # choose random indices
         best_idx = max(candidate_indices, key=lambda idx: distances[idx])
         return self.positions[best_idx]
+    
+    def clear(self):
+        self.positions = []
+        self.fitnesses = []
+
+    def reevaluate(self, objective):
+        if not self.positions:
+            return
+        old_positions = self.positions
+        self.positions = []
+        self.fitnesses = []
+        for pos in old_positions:
+            self.add_solution(pos, np.array(objective(pos)))
+
+    def local_search(self, objective, search_bounds, split_index=1, step_size=None, num_iterations=4):
+        if not self.positions:
+            return
+        if step_size == None:
+            percent = 0.10
+        else:
+            percent = step_size
+        for i in range(num_iterations):
+            lows = np.array([b[0] for b in search_bounds])
+            highs = np.array([b[1] for b in search_bounds])
+            extent = highs - lows
+
+            s1 = np.zeros(len(search_bounds))
+            s1[:split_index] = percent * extent[:split_index]
+            s2 = np.zeros(len(search_bounds))
+            s2[split_index:] = percent * extent[split_index:]
+
+            combinations = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)]
+
+            old_positions = self.positions
+            self.clear()
+
+            successors = []
+            for pos in old_positions:
+                for a1, a2 in combinations:
+                    candidate = pos + (a1 * s1) + (a2 * s2)
+                    candidate = np.clip(candidate, lows, highs)
+                    successors.append(candidate)
+
+            for pos in successors:
+                self.add_solution(pos, np.array(objective(pos)))
+
+            if step_size == None and percent != 0.0:
+                percent -= 0.02
 
     def __len__(self):
         return len(self.positions)

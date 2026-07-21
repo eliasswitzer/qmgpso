@@ -22,7 +22,7 @@ def plot_pareto_front(archive, objective_labels=None):
         plt.show()
 
     elif num_objectives == 3:
-        fig = plt.subplots(figsize=(7,6))
+        fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(fitnesses[:,0], fitnesses[:,1], fitnesses[:,2], c='tab:blue', s=20)
         ax.set_xlabel(objective_labels[0])
@@ -45,7 +45,7 @@ def plot_archive_size(history):
     plt.grid(True)
     plt.show()
 
-def plot_pareto_front_history(history, objective_labels=None, num_snapshots=6):
+def plot_pareto_front_history(history, objective_labels=None, num_snapshots=5):
     """Overlays several archive snapshots to show how the Pareto front changed over time from the changing environment"""
     snapshots = history['archive_snapshots']
     if not snapshots:
@@ -63,7 +63,7 @@ def plot_pareto_front_history(history, objective_labels=None, num_snapshots=6):
         fitnesses = np.array(snapshots[snap_i])
         if fitnesses.size == 0:
             continue
-        ax.scatter(fitnesses[:,0], fitnesses[:,1], color=cmap(color_i), label=f"Iteration {snap_i}", s=20, alpha=0.85)
+        ax.scatter(fitnesses[:,0], fitnesses[:,1], color=cmap(color_i), label=f"Iteration {snap_i+1}", s=20, alpha=0.85)
 
     ax.set_xlabel(objective_labels[0])
     ax.set_ylabel(objective_labels[1])

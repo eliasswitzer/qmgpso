@@ -60,7 +60,7 @@ class Archive:
         for existing_fitness in self.fitnesses:
             if dominates(existing_fitness, fitness, self.is_minimization):
                 return
-            if np.array_equal(existing_fitness, fitness):
+            if np.all(np.abs(existing_fitness - fitness) < 1e-9):
                 return
             
         # New solution is added, and thus drop any existing members that it dominates

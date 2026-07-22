@@ -62,21 +62,6 @@ class QPSO:
 
     def step(self, archive=None, tournament_size=3):
         """Runs one optimization step, where the algorithm first reevaluates best positions if an environment change occurs, then updates velocities and positions. Includes neutral and quantum particle updates."""
-        # Reactive change detection
-        if self.iteration > 0 and self.global_best_position is not None:
-            # Evaluate objective function at last known global best position
-            current_global_fitness = self.objective(self.global_best_position)
-
-            # Check if value is different from last iteration
-            if abs(current_global_fitness - self.global_best_fitness) > 1e-8:
-                # If so, re-evaluate personal bests of each particle
-                self.global_best_fitness = float('inf') if self.is_minimization else float('-inf')
-                for particle in self.particles:
-                    particle.best_fitness = self.objective(particle.best_position)
-                    if self.better_than(particle.best_fitness, self.global_best_fitness):
-                        self.global_best_position = particle.best_position.copy()
-                        self.global_best_fitness = particle.best_fitness
-        
         # Update velocities using local best
         for i in range(len(self.particles)):
             # Neutral particle update (standard velocity-position update)

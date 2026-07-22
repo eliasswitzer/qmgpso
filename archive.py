@@ -127,10 +127,11 @@ class Archive:
             percent = 0.10
         else:
             percent = step_size
+
+        lows = np.array([b[0] for b in search_bounds])
+        highs = np.array([b[1] for b in search_bounds])
+        extent = highs - lows
         for i in range(num_iterations): # repeat local search for set number of iterations
-            lows = np.array([b[0] for b in search_bounds])
-            highs = np.array([b[1] for b in search_bounds])
-            extent = highs - lows
 
             s1 = np.zeros(len(search_bounds))
             s1[:split_index] = percent * extent[:split_index]

@@ -43,13 +43,13 @@ class FDA1(DynamicProblem):
 
         self.tau_T = tau_T # frequency of change
         self.n_T = n_T # severity of change
-        self.t = 0.0 # time-step value
+        self.t = 0.0 # time-step/environment index value (number of times the environment has changed so far)
 
     def has_changed(self) -> bool:
         return self.iteration > 0 and (self.iteration % self.tau_T == 0)
     
     def handle_change(self):
-        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T) # change environments
 
     def evaluate(self, x):
         # Clip values to ensure they stay within bounds

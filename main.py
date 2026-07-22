@@ -12,10 +12,10 @@ random.seed(seed)
 
 # Initialize DMOP (Dynamic Multi Objective Problem)
 dims = 20
-problem = F7(dims=dims, tau_T=50 , n_T=10)
+problem =ZJZ(dims=dims, tau_T=25 , n_T=10)
 num_iterations = 1000
 
-qmgpso = QMGPSO(num_particles=30, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0.5, quantum_radius=0.5, archive_strategy="hd", archive_size=50)
+qmgpso = QMGPSO(num_particles=100, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0, quantum_radius=0.5, archive_strategy="hd", archive_size=100)
 
 # Initialize PSO particle positions and attractors
 qmgpso.initialize()

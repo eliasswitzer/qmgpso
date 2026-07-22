@@ -107,10 +107,96 @@ class ZJZ(DynamicProblem):
         return np.array([f1, f2])
 
 class F5(DynamicProblem):
-    pass
+    """
+    A benchmark problem proposed by Zhou et al., 2014
+    Type II Dynamic Problem (Both POS and POF change)
+    """
+    def __init__(self, dims=10, tau_T=10, n_T=10):
+        search_bounds = [(0.0, 5.0) for _ in range(dims)]
+        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self) -> bool:
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+    
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        n = self.dims
+        x1 = x_clamped[0]
+
+        H = 1.25 + 0.75 * np.sin(np.pi * (self.t / self.n_T))
+        a = 2 * np.cos(np.pi * self.t) + 2
+        b = 2 * np.sin(2 * np.pi * self.t) + 2
+
+        f1_sum, f2_sum = 0.0, 0.0
+        for i in range(2, n+1):
+            xi = x_clamped[i - 1]
+            yi = xi - b - 1 + np.abs(x1-a)**(H+i/n)
+            if i % 2 == 1: # odd i -> I1 -> f1
+                f1_sum += yi ** 2
+            else: # even i -> I2 -> f2
+                f2_sum += yi ** 2
+
+        f1 = np.abs(x1-a)**H + f1_sum
+        f2 = np.abs(x1-a-1)**H + f2_sum
+
+        return np.array([f1, f2])
 
 class F6(DynamicProblem):
-    pass
+    """
+    A benchmark problem proposed by Zhou et al., 2014
+    Type II Dynamic Problem (Both POS and POF change)
+    """
+    def __init__(self, dims=10, tau_T=10, n_T=10):
+        search_bounds = [(0.0, 5.0) for _ in range(dims)]
+        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self) -> bool:
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+    
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        n = self.dims
+        x1 = x_clamped[0]
+
+        H = 1.25 + 0.75 * np.sin(np.pi * (self.t / self.n_T))
+        a = 2 * np.cos(1.5 * np.pi * self.t) * np.sin(0.5 * np.pi * self.t) + 2
+        b = 2 * np.cos(1.5 * np.pi * self.t) * np.cos(0.5 * np.pi * self.t) + 2
+
+        f1_sum, f2_sum = 0.0, 0.0
+        for i in range(2, n+1):
+            xi = x_clamped[i - 1]
+            yi = xi - b - 1 + np.abs(x1-a)**(H+i/n)
+            if i % 2 == 1: # odd i -> I1 -> f1
+                f1_sum += yi ** 2
+            else: # even i -> I2 -> f2
+                f2_sum += yi ** 2
+
+        f1 = np.abs(x1-a)**H + f1_sum
+        f2 = np.abs(x1-a-1)**H + f2_sum
+
+        return np.array([f1, f2])
 
 class F7(DynamicProblem):
     """

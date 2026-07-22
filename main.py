@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 from qmgpso import QMGPSO
-from problems import FDA1, ZJZ, F7
+from problems import FDA1, ZJZ, F5, F6, F7
 from visualizations import plot_pareto_front, plot_archive_size, plot_pareto_front_history
 
 # Set Random Seed
@@ -11,8 +11,8 @@ np.random.seed(seed)
 random.seed(seed)
 
 # Initialize DMOP (Dynamic Multi Objective Problem)
-dims = 20
-problem =ZJZ(dims=dims, tau_T=25 , n_T=10)
+dims = 10
+problem =F6(dims=dims, tau_T=25 , n_T=10)
 num_iterations = 1000
 
 qmgpso = QMGPSO(num_particles=100, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, quantum_proportion=0, quantum_radius=0.5, archive_strategy="hd", archive_size=100)

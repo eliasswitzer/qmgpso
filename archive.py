@@ -105,10 +105,12 @@ class Archive:
         return self.positions[best_idx]
     
     def clear(self):
+        """Clears the stored particles in the archive"""
         self.positions = []
         self.fitnesses = []
 
     def reevaluate(self, objective):
+        """Reevaluates the archive by comparing every existing stored particle for non-dominance"""
         if not self.positions:
             return
         old_positions = self.positions
@@ -118,13 +120,14 @@ class Archive:
             self.add_solution(pos, np.array(objective(pos)))
 
     def local_search(self, objective, search_bounds, split_index=1, step_size=None, num_iterations=4):
+        """An archive management strategy for dynamic optimization. Can have fixed or decreasing step size. Generates successors by moving decision variables of existing solutions by an percentage of the domain's extent. Reevaluates combined archive of original solutions and successor solutions."""
         if not self.positions:
             return
         if step_size == None:
             percent = 0.10
         else:
             percent = step_size
-        for i in range(num_iterations):
+        for i in range(num_iterations): # repeat local search for set number of iterations
             lows = np.array([b[0] for b in search_bounds])
             highs = np.array([b[1] for b in search_bounds])
             extent = highs - lows
@@ -134,12 +137,12 @@ class Archive:
             s2 = np.zeros(len(search_bounds))
             s2[split_index:] = percent * extent[split_index:]
 
-            combinations = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)]
-
-            old_positions = self.positions
-            self.clear()
+            combinations = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)] # 8 successor solution combinations of x1 and x2
 
             successors = []
+            old_positions = self.positions
+
+            # Generate successor solutions and add them to the archive
             for pos in old_positions:
                 for a1, a2 in combinations:
                     candidate = pos + (a1 * s1) + (a2 * s2)
@@ -150,7 +153,7 @@ class Archive:
                 self.add_solution(pos, np.array(objective(pos)))
 
             if step_size == None and percent != 0.0:
-                percent -= 0.02
+                percent /= 2
 
     def __len__(self):
         return len(self.positions)

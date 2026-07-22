@@ -147,3 +147,10 @@ class QPSO:
         self.history['diversity'].append(swarm_spread)
 
         self.iteration += 1
+
+    def handle_change(self):
+        """Handles parameter resampling for environment changes"""
+        for p in self.particles:
+            p.l = np.random.uniform(0,1) # resample balance coefficient upon environment change
+            p.best_position = p.position.copy() # as an environment change reaction strategy, all particles pbest values are reset to the current particle's position
+            p.best_fitness = self.objective(p.position) # reevaluate particle fitness on environment change

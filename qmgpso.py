@@ -73,3 +73,6 @@ class QMGPSO:
             self.archive.local_search(self.objective, self.search_bounds)
         else:
             pass
+
+        for subswarm in self.subswarms:
+            subswarm.handle_change()

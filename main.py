@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import argparse
+from tqdm import tqdm
 
 from qmgpso import QMGPSO
 from problems import FDA1, ZJZ, F5, F6, F7
@@ -57,14 +58,13 @@ qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bound
 qmgpso.initialize()
 
 # Main PSO Loop
-for iteration in range(args.iterations):
-    print(f"Iteration {iteration + 1}/{args.iterations}")
+for iteration in tqdm(range(args.iterations), desc="Optimizing"):
+    # print(f"Iteration {iteration + 1}/{args.iterations}")
 
     qmgpso.step()
     problem.advance()
 
     if problem.has_changed():
-        print("Environment has changed!")
         problem.handle_change()
         qmgpso.handle_change()
 

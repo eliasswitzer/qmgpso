@@ -43,13 +43,13 @@ class QPSO:
     def initialize(self):
         """Initializes n particles, their position, velocity and personal best fitnesses"""
         # Initial Evaluation
-        print("Evaluating Initial Population")
+        # print("Evaluating Initial Population")
         for i in range(len(self.particles)):
-            print(f"Particle {i+1}")
+            # print(f"Particle {i+1}")
             position = self.particles[i].get_position()
 
             fitness = self.objective(position)
-            print(f"Fitness: {fitness:.4f} | Position: {position}")
+            # print(f"Fitness: {fitness:.4f} | Position: {position}")
 
             # Set Initial Personal Best
             self.particles[i].best_fitness = fitness

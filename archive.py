@@ -120,6 +120,7 @@ class Archive:
             self.add_solution(pos, np.array(objective(pos)))
 
     def local_search(self, objective, search_bounds, split_index=1, step_size=None, num_iterations=4):
+        # TODO: refactor to improve runtime
         """An archive management strategy for dynamic optimization. Can have fixed or decreasing step size. Generates successors by moving decision variables of existing solutions by an percentage of the domain's extent. Reevaluates combined archive of original solutions and successor solutions."""
         if not self.positions:
             return
@@ -141,7 +142,8 @@ class Archive:
             combinations = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)] # 8 successor solution combinations of x1 and x2
 
             successors = []
-            old_positions = self.positions
+            old_positions = list(self.positions)
+            self.clear()
 
             # Generate successor solutions and add them to the archive
             for pos in old_positions:
@@ -149,6 +151,8 @@ class Archive:
                     candidate = pos + (a1 * s1) + (a2 * s2)
                     candidate = np.clip(candidate, lows, highs)
                     successors.append(candidate)
+
+            successors = successors + old_positions
 
             for pos in successors:
                 self.add_solution(pos, np.array(objective(pos)))

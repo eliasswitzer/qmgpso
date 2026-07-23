@@ -155,7 +155,6 @@ class F5(DynamicProblem):
     
     def handle_change(self):
         self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
-        print(f"ENVIRONMENT{self.t}")
 
     def evaluate(self, x):
         n = self.dims

@@ -106,7 +106,7 @@ class QPSO:
 
             position = self.particles[i].get_position()
             fitness = self.objective(position)
-            print(f"Particle {i+1} | Fitness: {fitness:.4f} | Position: {position}")
+            # print(f"Particle {i+1} | Fitness: {fitness:.4f} | Position: {position}")
 
             # Clip to Search Bounds
             low = np.array([b[0] for b in self.search_bounds])

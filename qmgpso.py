@@ -1,5 +1,6 @@
 from qpso import QPSO
 from archive import Archive
+import numpy as np
 
 class QMGPSO:
     """
@@ -48,7 +49,12 @@ class QMGPSO:
             subswarm.step(archive=self.archive)
         self.update_archive()
         self.history['archive_size'].append(len(self.archive))
-        self.history['archive_snapshots'].append([f.copy() for f in self.archive.fitnesses])
+        if len(self.archive.fitnesses) > 0:
+            snapshot = np.array([f.copy() for f in self.archive.fitnesses])
+        else:
+            snapshot = np.empty((0, self.num_objectives))
+        self.history['archive_snapshots'].append(snapshot)
+        
 
     def update_archive(self):
         """Add current positions to archive"""

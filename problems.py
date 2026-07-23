@@ -124,23 +124,19 @@ class F5(DynamicProblem):
     
     def handle_change(self):
         self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+        print(f"ENVIRONMENT{self.t}")
 
     def evaluate(self, x):
-        # Clip values to ensure they stay within bounds
-        lows = np.array([b[0] for b in self.search_bounds])
-        highs = np.array([b[1] for b in self.search_bounds])
-        x_clamped = np.clip(x, lows, highs)
-
         n = self.dims
-        x1 = x_clamped[0]
+        x1 = x[0]
 
-        H = 1.25 + 0.75 * np.sin(np.pi * (self.t / self.n_T))
+        H = 1.25 + 0.75 * np.sin(np.pi * self.t)
         a = 2 * np.cos(np.pi * self.t) + 2
         b = 2 * np.sin(2 * np.pi * self.t) + 2
 
         f1_sum, f2_sum = 0.0, 0.0
         for i in range(2, n+1):
-            xi = x_clamped[i - 1]
+            xi = x[i - 1]
             yi = xi - b - 1 + np.abs(x1-a)**(H+i/n)
             if i % 2 == 1: # odd i -> I1 -> f1
                 f1_sum += yi ** 2
@@ -172,21 +168,16 @@ class F6(DynamicProblem):
         self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
 
     def evaluate(self, x):
-        # Clip values to ensure they stay within bounds
-        lows = np.array([b[0] for b in self.search_bounds])
-        highs = np.array([b[1] for b in self.search_bounds])
-        x_clamped = np.clip(x, lows, highs)
-
         n = self.dims
-        x1 = x_clamped[0]
+        x1 = x[0]
 
-        H = 1.25 + 0.75 * np.sin(np.pi * (self.t / self.n_T))
+        H = 1.25 + 0.75 * np.sin(np.pi * self.t)
         a = 2 * np.cos(1.5 * np.pi * self.t) * np.sin(0.5 * np.pi * self.t) + 2
         b = 2 * np.cos(1.5 * np.pi * self.t) * np.cos(0.5 * np.pi * self.t) + 2
 
         f1_sum, f2_sum = 0.0, 0.0
         for i in range(2, n+1):
-            xi = x_clamped[i - 1]
+            xi = x[i - 1]
             yi = xi - b - 1 + np.abs(x1-a)**(H+i/n)
             if i % 2 == 1: # odd i -> I1 -> f1
                 f1_sum += yi ** 2
@@ -218,21 +209,16 @@ class F7(DynamicProblem):
         self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
 
     def evaluate(self, x):
-        # Clip values to ensure they stay within bounds
-        lows = np.array([b[0] for b in self.search_bounds])
-        highs = np.array([b[1] for b in self.search_bounds])
-        x_clamped = np.clip(x, lows, highs)
-
         n = self.dims
-        x1 = x_clamped[0]
+        x1 = x[0]
 
-        H = 1.25 + 0.75 * np.sin(np.pi * (self.t / self.n_T))
+        H = 1.25 + 0.75 * np.sin(np.pi * self.t)
         a = 1.7 * (1 - np.sin(np.pi * self.t)) * np.sin(np.pi * self.t) + 3.4
         b = 1.4 * (1 - np.sin(np.pi * self.t)) * np.cos(np.pi * self.t) + 2.1
 
         f1_sum, f2_sum = 0.0, 0.0
         for i in range(2, n+1):
-            xi = x_clamped[i - 1]
+            xi = x[i - 1]
             yi = xi - b - 1 + np.abs(x1-a)**(H+i/n)
             if i % 2 == 1: # odd i -> I1 -> f1
                 f1_sum += yi ** 2

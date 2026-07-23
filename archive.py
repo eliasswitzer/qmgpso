@@ -133,7 +133,7 @@ class Archive:
         extent = highs - lows
         for i in range(num_iterations): # repeat local search for set number of iterations
 
-            s1 = np.zeros(len(search_bounds))
+            s1 = np.zeros(len(search_bounds)) # by default, the decision variable for the first objective function is in index 0
             s1[:split_index] = percent * extent[:split_index]
             s2 = np.zeros(len(search_bounds))
             s2[split_index:] = percent * extent[split_index:]

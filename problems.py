@@ -37,9 +37,8 @@ class FDA1(DynamicProblem):
         A benchmark multi-objective problem proposed by Farina et al., 2004
         Type I Dynamic Problem (POS changes but POF remains static)
     """
-    def __init__(self, dims=20, tau_T=10, n_T=10):
-        search_bounds = [(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(dims-1)]
-        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=20, num_objectives=2, search_bounds=[(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(20)], is_minimization=[True, True])
 
         self.tau_T = tau_T # frequency of change
         self.n_T = n_T # severity of change
@@ -73,9 +72,8 @@ class ZJZ(DynamicProblem):
         A benchmark multi-objective problem proposed by Zhou et al., 2006
         Type II Dynamic Problem (Both POS and POF change)
     """
-    def __init__(self, dims=20, tau_T=10, n_T=10):
-        search_bounds = [(0.0, 1.0)] + [(-1.0, 2.0) for _ in range(dims-1)]
-        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=20, num_objectives=2, search_bounds=[(0.0, 1.0)] + [(-1.0, 2.0) for _ in range(20)], is_minimization=[True, True])
 
         self.tau_T = tau_T # frequency of change
         self.n_T = n_T # severity of change
@@ -106,14 +104,47 @@ class ZJZ(DynamicProblem):
 
         return np.array([f1, f2])
 
+class FDA2(DynamicProblem):
+    """
+        A benchmark multi-objective problem proposed by Camara et al., 2010
+        Type III Dynamic Problem (POF changes but POS remains static)
+    """
+    def __init__(self, tau_T=10, n_T=10, z=5):
+        super().__init__(dims=31, num_objectives=2, search_bounds=[(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(30)], is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+        self.z = z # problem parameter
+
+    def has_changed(self) -> bool:
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+    
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        x1 = x[0]
+        x2 = x[1:16]
+        x3 = x[16:]
+
+        H = self.z ** (-np.cos(np.pi *  self.t / 4))
+        f1 = x1
+
+        g = 1 + np.sum(x2**2)
+        h = 1 - (np.clip(f1/max(g,1e-9), 0.0, 1.0))**(H + np.sum((x3-(H/2))**2))
+
+        f2 = g*h
+
+        return np.array([f1, f2])
+
 class F5(DynamicProblem):
     """
     A benchmark problem proposed by Zhou et al., 2014
     Type II Dynamic Problem (Both POS and POF change)
     """
-    def __init__(self, dims=10, tau_T=10, n_T=10):
-        search_bounds = [(0.0, 5.0) for _ in range(dims)]
-        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(0.0, 5.0) for _ in range(10)], is_minimization=[True, True])
 
         self.tau_T = tau_T # frequency of change
         self.n_T = n_T # severity of change
@@ -153,9 +184,8 @@ class F6(DynamicProblem):
     A benchmark problem proposed by Zhou et al., 2014
     Type II Dynamic Problem (Both POS and POF change)
     """
-    def __init__(self, dims=10, tau_T=10, n_T=10):
-        search_bounds = [(0.0, 5.0) for _ in range(dims)]
-        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(0.0, 5.0) for _ in range(10)], is_minimization=[True, True])
 
         self.tau_T = tau_T # frequency of change
         self.n_T = n_T # severity of change
@@ -194,9 +224,8 @@ class F7(DynamicProblem):
     A benchmark problem proposed by Zhou et al., 2014
     Type II Dynamic Problem (Both POS and POF change)
     """
-    def __init__(self, dims=10, tau_T=10, n_T=10):
-        search_bounds = [(0.0, 5.0) for _ in range(dims)]
-        super().__init__(dims=dims, num_objectives=2, search_bounds=search_bounds, is_minimization=[True, True])
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(0.0, 5.0) for _ in range(10)], is_minimization=[True, True])
 
         self.tau_T = tau_T # frequency of change
         self.n_T = n_T # severity of change

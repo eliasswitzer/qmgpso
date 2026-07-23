@@ -58,9 +58,6 @@ def plot_pareto_front_history(history, objective_labels=None, num_snapshots=5, t
     else:
         chosen_idx = np.linspace(0, len(snapshots)-1, min(num_snapshots, len(snapshots))).astype(int)
 
-
-    cmap = plt.colormaps['viridis'].resampled(len(chosen_idx))
-
     if objective_labels is None:
         objective_labels = ["f1", "f2"]
 
@@ -69,14 +66,13 @@ def plot_pareto_front_history(history, objective_labels=None, num_snapshots=5, t
         fitnesses = np.array(snapshots[snap_i])
         if fitnesses.size == 0:
             continue
-        ax.scatter(fitnesses[:,0], fitnesses[:,1], color=cmap(color_i), label=f"Iteration {snap_i+1}", s=10, alpha=0.85)
+        ax.scatter(fitnesses[:,0], fitnesses[:,1], color='tab:blue', label=f"Iteration {snap_i+1}", s=10, alpha=0.85)
 
     ax.set_xlabel(objective_labels[0])
     ax.set_ylabel(objective_labels[1])
     ax.set_xlim(0.0, 1.0)
     ax.set_ylim(0.0, 1.0)
     ax.set_title("Pareto Front Tracking Over Time")
-    ax.legend(loc='best', fontsize=8)
     ax.grid(True)
     plt.tight_layout()
     plt.show()

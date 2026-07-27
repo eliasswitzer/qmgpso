@@ -32,6 +32,11 @@ class DynamicProblem(ABC):
         """Evaluates a position vector and returns a numpy array with fitness values for each objective"""
         pass
 
+    @abstractmethod
+    def true_pareto_front(self, num_points=1000):
+        """Returns a NumPy array containing objective vectors uniformly sampled from the true Pareto-optimal front of the problem at its current point in time"""
+        pass
+
 class FDA1(DynamicProblem):
     """
         A benchmark multi-objective problem proposed by Farina et al., 2004
@@ -66,6 +71,11 @@ class FDA1(DynamicProblem):
         f2 = 1.0 - np.sqrt(f1/max(g,1e-9)) # prevents division by 0
 
         return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+        f1 = np.linspace(0.0, 1.0, num_points)
+        f2 = 1.0 - np.sqrt(f1)
+        return np.column_stack([f1, f2])
 
 class ZJZ(DynamicProblem):
     """
@@ -104,6 +114,13 @@ class ZJZ(DynamicProblem):
 
         return np.array([f1, f2])
 
+    def true_pareto_front(self, num_points=1000):
+        G = np.sin(0.5 * np.pi * self.t)
+        H = 1.5 + G
+        f1 = np.linspace(0.0, 1.0, num_points)
+        f2 = 1.0 - f1**H
+        return np.column_stack([f1, f2])
+
 class FDA2(DynamicProblem):
     """
         A benchmark multi-objective problem proposed by Camara et al., 2010
@@ -137,6 +154,13 @@ class FDA2(DynamicProblem):
         f2 = g*h
 
         return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+        H = self.z ** (-np.cos(np.pi *  self.t / 4))
+        f1 = np.linspace(0.0, 1.0, num_points)
+        f2 = 1.0 - f1**H
+        return np.column_stack([f1, f2])
+
 
 class F5(DynamicProblem):
     """
@@ -178,6 +202,13 @@ class F5(DynamicProblem):
 
         return np.array([f1, f2])
 
+    def true_pareto_front(self, num_points=1000):
+        H = 1.25 + 0.75 * np.sin(np.pi * self.t)
+        s = np.linspace(0.0, 1.0, num_points) # parameterize s=x1-a gives f1=s**H and f2=(1-s)**H
+        f1 = s**H
+        f2 = (1.0 - s)**H
+        return np.column_stack([f1, f2])
+
 class F6(DynamicProblem):
     """
     A benchmark problem proposed by Zhou et al., 2014
@@ -218,6 +249,13 @@ class F6(DynamicProblem):
 
         return np.array([f1, f2])
 
+    def true_pareto_front(self, num_points=1000):
+            H = 1.25 + 0.75 * np.sin(np.pi * self.t)
+            s = np.linspace(0.0, 1.0, num_points) # parameterize s=x1-a gives f1=s**H and f2=(1-s)**H
+            f1 = s**H
+            f2 = (1.0 - s)**H
+            return np.column_stack([f1, f2])
+
 class F7(DynamicProblem):
     """
     A benchmark problem proposed by Zhou et al., 2014
@@ -257,3 +295,10 @@ class F7(DynamicProblem):
         f2 = np.abs(x1-a-1)**H + f2_sum
 
         return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+            H = 1.25 + 0.75 * np.sin(np.pi * self.t)
+            s = np.linspace(0.0, 1.0, num_points) # parameterize s=x1-a gives f1=s**H and f2=(1-s)**H
+            f1 = s**H
+            f2 = (1.0 - s)**H
+            return np.column_stack([f1, f2])

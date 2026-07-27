@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from qmgpso import QMGPSO
 from problems import FDA1, ZJZ, FDA2, F5, F6, F7
+from metrics import MetricsTracker
 from visualizations import plot_pareto_front, plot_archive_size, plot_pareto_front_history
 
 # PARAMETERS
@@ -33,6 +34,9 @@ parser.add_argument("-qr", '--quantum_radius', metavar="quantum_radius", type=fl
 parser.add_argument('-st', '--archive_strategy', metavar="archive_strategy", type=str, required=False, default="hd", choices=["cl", "re", "h2", "h5", "h10", "hd"], help="The archive management strategy used to update archive solutions upon environment change. Default=hd")
 parser.add_argument('-as', "--archive_size", metavar="archive_size", type=int, required=False, default=100, help="The max size for the bounded archive. Default=100")
 
+# Metrics
+parser.add_argument('-m', '--metrics', action='store_true', help="If included, computes the six metrics")
+
 args = parser.parse_args()
 print(f"Args: {args}")
 
@@ -59,6 +63,7 @@ qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bound
 qmgpso.initialize()
 
 # Main PSO Loop
+tracker = MetricsTracker(is_minimization=problem.is_minimization)
 for iteration in tqdm(range(args.iterations), desc="Optimizing"):
     # print(f"Iteration {iteration + 1}/{args.iterations}")
 
@@ -66,12 +71,19 @@ for iteration in tqdm(range(args.iterations), desc="Optimizing"):
     problem.advance()
 
     if problem.has_changed():
+        if args.metrics:
+            true_pof = problem.true_pareto_front()
+            tracker.record(qmgpso.archive.fitnesses, true_pof)
         problem.handle_change()
         qmgpso.handle_change()
+
+if args.metrics:
+    results = tracker.summary()
+    print(results)
 
 # Show plots
 plot_pareto_front(qmgpso.archive)
 plot_archive_size(qmgpso.history)
 plot_pareto_front_history(qmgpso.history, num_snapshots=1000, tau_T=args.tau_t)
 
-# TODO: METRICS (accuracy, stability, etc.) and more VISUALS
+# TODO: More VISUALS

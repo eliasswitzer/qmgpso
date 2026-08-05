@@ -6,7 +6,7 @@ class QMGPSO:
     """
     Quantum Multi-Guide Particle Swarm Optimization, incoporating one QPSO subswarm per objective function and an archive enforcing Pareto-dominance for dynamic multi-objective optimization
     """
-    def __init__(self, num_particles, search_bounds, objective, num_objectives, is_minimization, w=0.6, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, quantum_proportion=0.5, quantum_radius=1.0, archive_strategy="hd", archive_size=None):
+    def __init__(self, num_particles, search_bounds, objective, num_objectives, is_minimization, w=0.6, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, quantum_proportion=0.5, quantum_radius=1.0, quantum_strategy="adaptive", quantum_guide="t", pcx_sigma1=0.1, pcx_sigma2=0.3, pcx_num_parents=3, archive_strategy="hd", archive_size=None):
         self.objective = objective
         self.num_objectives = num_objectives
         self.search_bounds = search_bounds
@@ -28,7 +28,7 @@ class QMGPSO:
             def obj_m(x, m=m): # Separate each objective function by passing in mini-function that returns corresponding objective value
                 return self.objective(x)[m]
             
-            self.subswarms.append(QPSO(num_particles=particles_per_swarm[m], search_bounds=search_bounds, objective=obj_m, w=w, c1=c1, c2=c2, c3=c3, neighborhood_size=neighborhood_size, is_minimization=self.is_minimization[m], quantum_proportion=quantum_proportion, quantum_radius=quantum_radius))
+            self.subswarms.append(QPSO(num_particles=particles_per_swarm[m], search_bounds=search_bounds, objective=obj_m, w=w, c1=c1, c2=c2, c3=c3, neighborhood_size=neighborhood_size, is_minimization=self.is_minimization[m], quantum_proportion=quantum_proportion, quantum_radius=quantum_radius, quantum_strategy=quantum_strategy, quantum_guide=quantum_guide, pcx_sigma1=pcx_sigma1, pcx_sigma2=pcx_sigma2, pcx_num_parents=pcx_num_parents))
 
         self.history = {
             'archive_size': [],

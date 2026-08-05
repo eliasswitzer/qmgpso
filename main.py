@@ -29,6 +29,11 @@ parser.add_argument('-ns', '--neighborhood_size', metavar='neighborhood_size', t
 # QPSO Parameters
 parser.add_argument('-qp', '--quantum_proportion', metavar="quantum_proportion", type=float, required=False, default=0.5, help="The proportion of total particles to designate as quantum particles (will update using proportion sampling and radius). Default=0.5")
 parser.add_argument("-qr", '--quantum_radius', metavar="quantum_radius", type=float, required=False, default=0.5, help="The problem-dependent radius parameter for the distribution used in quantum particle position update. Default=0.5")
+parser.add_argument('-qs', '--quantum_strategy', metavar="quantum_strategy", type=str, required=False, default="adaptive", choices=["original", "adaptive", "pcx"], help="The quantum particle update strategy. Default=adaptive")
+parser.add_argument('-qg', '--quantum_guide', metavar="quantum_guide", type=str, required=False, default="t", choices=["n", "r", "t"], help="Which guide position quantum particles are sampled/mutated around, where n is nbest position, r is random archive position and t is tournament selection from archive. Default=t")
+parser.add_argument('-ps1', '--pcx_sigma1', metavar="pcx_sigma1", type=float, required=False, default=0.1, help="Sigma 1 deviation parameter for PCX QPSO (along the parent-to-mean direction). Only used when quantum strategy is pcx. Default=0.1")
+parser.add_argument('-ps2', '--pcx_sigma2', metavar="pcx_sigma2", type=float, required=False, default=0.3, help="Sigma 2 deviation parameter for PCX QPSO (perpendicular to the parent-to-mean direction). Only used when quantum strategy is pcx. Default=0.3")
+parser.add_argument('-pn', '--pcx_num_parents', metavar="pcx_num_parents", type=int, required=False, default=3, help="Number of parents used by the PCX crossover operator. Only used when quantum strategy is pcx. Default=3")
 
 # MGPSO Parameters
 parser.add_argument('-st', '--archive_strategy', metavar="archive_strategy", type=str, required=False, default="hd", choices=["cl", "re", "h2", "h5", "h10", "hd"], help="The archive management strategy used to update archive solutions upon environment change. Default=hd")
@@ -59,7 +64,7 @@ elif args.problem == "F7":
     problem = F7(tau_T=args.tau_t , n_T=args.n_t)
 
 
-qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, w=args.w, c1=args.c1, c2=args.c2, c3=args.c3, neighborhood_size=args.neighborhood_size, quantum_proportion=args.quantum_proportion, quantum_radius=args.quantum_radius, archive_strategy=args.archive_strategy, archive_size=args.archive_size)
+qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, w=args.w, c1=args.c1, c2=args.c2, c3=args.c3, neighborhood_size=args.neighborhood_size, quantum_proportion=args.quantum_proportion, quantum_radius=args.quantum_radius, quantum_strategy=args.quantum_strategy, quantum_guide=args.quantum_guide, pcx_sigma1=args.pcx_sigma1, pcx_sigma2=args.pcx_sigma2, pcx_num_parents=args.pcx_num_parents, archive_strategy=args.archive_strategy, archive_size=args.archive_size)
 qmgpso.initialize()
 
 # Main PSO Loop

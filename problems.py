@@ -302,3 +302,5 @@ class F7(DynamicProblem):
             f1 = s**H
             f2 = (1.0 - s)**H
             return np.column_stack([f1, f2])
+
+# TODO: add DIMP1, DF4, DF6, FDA5

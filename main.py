@@ -69,10 +69,12 @@ qmgpso.initialize()
 
 # Main PSO Loop
 tracker = MetricsTracker(is_minimization=problem.is_minimization)
+true_history = []
 for iteration in tqdm(range(args.iterations), desc="Optimizing"):
     # print(f"Iteration {iteration + 1}/{args.iterations}")
 
     qmgpso.step()
+    true_history.append(problem.true_pareto_front(num_points=200))
     problem.advance()
 
     if problem.has_changed():
@@ -89,6 +91,6 @@ if args.metrics:
 # Show plots
 plot_pareto_front(qmgpso.archive)
 plot_archive_size(qmgpso.history)
-plot_pareto_front_history(qmgpso.history, num_snapshots=1000, tau_T=args.tau_t)
+plot_pareto_front_history(qmgpso.history, true_history=true_history, num_snapshots=1000, tau_T=args.tau_t)
 
-# TODO: More VISUALS
+# TODO: More VISUALS (pareto set visual)

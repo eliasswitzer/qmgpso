@@ -45,7 +45,7 @@ def plot_archive_size(history):
     plt.grid(True)
     plt.show()
 
-def plot_pareto_front_history(history, objective_labels=None, num_snapshots=5, tau_T=None):
+def plot_pareto_front_history(history, true_history=None, objective_labels=None, num_snapshots=5, tau_T=None):
     """Overlays several archive snapshots to show how the Pareto front changed over time from the changing environment"""
     snapshots = history['archive_snapshots']
     if not snapshots:
@@ -62,11 +62,18 @@ def plot_pareto_front_history(history, objective_labels=None, num_snapshots=5, t
         objective_labels = ["f1", "f2"]
 
     fig, ax = plt.subplots(figsize = (8,8))
-    for color_i, snap_i in enumerate(chosen_idx):
-        fitnesses = np.array(snapshots[snap_i])
+    for _, i in enumerate(chosen_idx):
+        fitnesses = np.array(snapshots[i])
         if fitnesses.size == 0:
             continue
-        ax.scatter(fitnesses[:,0], fitnesses[:,1], color='tab:blue', label=f"Iteration {snap_i+1}", s=10, alpha=0.85)
+        ax.scatter(fitnesses[:,0], fitnesses[:,1], color='tab:blue', label=f"Iteration {i+1}", s=10, alpha=0.85)
+
+        if true_history is not None and i < len(true_history):
+            true_pof = np.array(true_history[i])
+            if true_pof.size == 0:
+                continue
+            order = np.argsort(true_pof[:,0])
+            ax.plot(true_pof[order,0], true_pof[order,1], color='tab:red', linewidth=1.5, alpha=0.5, zorder=1)
 
     ax.set_xlabel(objective_labels[0])
     ax.set_ylabel(objective_labels[1])

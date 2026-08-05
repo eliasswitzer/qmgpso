@@ -39,8 +39,12 @@ parser.add_argument('-pn', '--pcx_num_parents', metavar="pcx_num_parents", type=
 parser.add_argument('-st', '--archive_strategy', metavar="archive_strategy", type=str, required=False, default="hd", choices=["cl", "re", "h2", "h5", "h10", "hd"], help="The archive management strategy used to update archive solutions upon environment change. Default=hd")
 parser.add_argument('-as', "--archive_size", metavar="archive_size", type=int, required=False, default=100, help="The max size for the bounded archive. Default=100")
 
-# Metrics
+# Metric Flags
 parser.add_argument('-m', '--metrics', action='store_true', help="If included, computes the six metrics")
+
+# Visualization Flags
+parser.add_argument('-pas', '--plot_archive_size', action='store_true', help="If included, displays plot of archive size over iterations")
+parser.add_argument('-ptp', '--plot_true_pareto', action='store_true', help="If included, overlays true pareto front over found pareto front in pareto front over iterations visual")
 
 args = parser.parse_args()
 print(f"Args: {args}")
@@ -89,8 +93,12 @@ if args.metrics:
     print(results)
 
 # Show plots
-plot_pareto_front(qmgpso.archive)
-plot_archive_size(qmgpso.history)
-plot_pareto_front_history(qmgpso.history, true_history=true_history, num_snapshots=1000, tau_T=args.tau_t)
+if args.plot_archive_size:
+    plot_archive_size(qmgpso.history)
+
+if args.plot_true_pareto:
+    plot_pareto_front_history(qmgpso.history, true_history=true_history, num_snapshots=1000, tau_T=args.tau_t)
+else:
+    plot_pareto_front_history(qmgpso.history, num_snapshots=1000, tau_T=args.tau_t)
 
 # TODO: More VISUALS (pareto set visual)

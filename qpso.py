@@ -8,7 +8,7 @@ class QPSO:
     """
     Runs single-objective QPSO
     """
-    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0, quantum_strategy="adaptive", quantum_guide="t", pcx_sigma1=0.1, pcx_sigma2=0.3, pcx_num_parents=3,):
+    def __init__(self, num_particles, search_bounds, objective, w=0.729844, c1=0.1, c2=0.02, c3=1.8, neighborhood_size=3, is_minimization=True, quantum_proportion=0.5, quantum_radius=1.0, quantum_strategy="adaptive", quantum_guide="t", pcx_sigma1=0.1, pcx_sigma2=0.3, pcx_num_parents=3, stability_guided=False):
         self.iteration = 0
         self.particles = []
         num_quantum = int(num_particles * quantum_proportion)
@@ -50,6 +50,8 @@ class QPSO:
             'avg_fitness': [],
             'diversity': []
         }
+
+        self.stability_guided = stability_guided
 
     def initialize(self):
         """Initializes n particles, their position, velocity and personal best fitnesses"""
@@ -165,6 +167,25 @@ class QPSO:
         offspring = mutation_parent + (self.pcx_sigma1 * np.random.normal(0, 1) * d) + (self.pcx_sigma2 * D_bar * random_perpendicular_component)
         return offspring
 
+    def _sample_stable_control_parameters(self, l, max_attempts=10):
+        for _ in range(max_attempts):
+            w = np.random.uniform(low=0, high=1)
+            c1 = np.random.uniform(low=0, high=2)
+            c2 = np.random.uniform(low=0, high=2)
+            c3 = np.random.uniform(low=0, high=2)
+            if self._check_stability(w, l, c1, c2, c3):
+                return w, c1, c2, c3
+        return self.w, self.c1, self.c2, self.c3 # reuse current parameters if no parameter values generated satisfy the stability conditions
+
+
+    def _check_stability(self, w, l, c1, c2, c3):
+        rho = c1 + l*c2 + (1-l)*c3
+        upper_bound = (4*(1-w**2)) / (1-w+((c1**2+(l**2)*(c2**2)+((1-l)**2)*(c3**2))*(1+w)/(3*rho**2)))
+        if 0 < rho < upper_bound and abs(w) < 1:
+            return True
+        return False
+
+    
     def step(self, archive=None, tournament_size=3):
         """Runs one optimization step, where the algorithm first reevaluates best positions if an environment change occurs, then updates velocities and positions. Includes neutral and quantum particle updates."""
         # Update velocities using local best
@@ -173,6 +194,10 @@ class QPSO:
             if self.particles[i].is_quantum == False:
                 
                 local_best_position = self._get_neighborhood_best(i)
+
+                # Generate w, c1, c2 and c3 if using stability-guided QMGPSO (falls back to default parameters if it cannot generate stable parameters on the first iteration)
+                if self.stability_guided:
+                    self.w, self.c1, self.c2, self.c3 = self._sample_stable_control_parameters(self.particles[i].l)
 
                 # Update Velocity
                 r1 = np.random.rand(len(self.particles[i].position))

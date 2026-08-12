@@ -39,6 +39,9 @@ parser.add_argument('-pn', '--pcx_num_parents', metavar="pcx_num_parents", type=
 parser.add_argument('-st', '--archive_strategy', metavar="archive_strategy", type=str, required=False, default="hd", choices=["cl", "re", "h2", "h5", "h10", "hd"], help="The archive management strategy used to update archive solutions upon environment change. Default=hd")
 parser.add_argument('-as', "--archive_size", metavar="archive_size", type=int, required=False, default=100, help="The max size for the bounded archive. Default=100")
 
+# SG Flags
+parser.add_argument('-sg', '--stability_guided', action='store_true', help="If included, samples the QMGPSO control parameters from the derived stability region instead of using user-specified parameters.")
+
 # Metric Flags
 parser.add_argument('-m', '--metrics', action='store_true', help="If included, computes the six metrics")
 
@@ -68,7 +71,7 @@ elif args.problem == "F7":
     problem = F7(tau_T=args.tau_t , n_T=args.n_t)
 
 
-qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, w=args.w, c1=args.c1, c2=args.c2, c3=args.c3, neighborhood_size=args.neighborhood_size, quantum_proportion=args.quantum_proportion, quantum_radius=args.quantum_radius, quantum_strategy=args.quantum_strategy, quantum_guide=args.quantum_guide, pcx_sigma1=args.pcx_sigma1, pcx_sigma2=args.pcx_sigma2, pcx_num_parents=args.pcx_num_parents, archive_strategy=args.archive_strategy, archive_size=args.archive_size)
+qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, w=args.w, c1=args.c1, c2=args.c2, c3=args.c3, neighborhood_size=args.neighborhood_size, quantum_proportion=args.quantum_proportion, quantum_radius=args.quantum_radius, quantum_strategy=args.quantum_strategy, quantum_guide=args.quantum_guide, pcx_sigma1=args.pcx_sigma1, pcx_sigma2=args.pcx_sigma2, pcx_num_parents=args.pcx_num_parents, archive_strategy=args.archive_strategy, archive_size=args.archive_size, stability_guided=args.stability_guided)
 qmgpso.initialize()
 
 # Main PSO Loop
@@ -101,4 +104,4 @@ if args.plot_true_pareto:
 else:
     plot_pareto_front_history(qmgpso.history, num_snapshots=1000, tau_T=args.tau_t)
 
-# TODO: More VISUALS (pareto set visual)
+# TODO: More VISUALS (pareto set visual) 

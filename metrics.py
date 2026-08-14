@@ -100,16 +100,19 @@ def _dominates_min(a,b):
 
 def _filter_nondominated_min(points):
     """
-    Removes dominated points from a point set, assuming minimization in every objective
+    Removes dominated points from a point set, assuming minimization in every objective (vectorized via NumPy broadcasting)
     """
     points = np.array(points, dtype=float)
-    if len(points) == 0:
+    n = len(points)
+    if n == 0:
         return points
-    keep = []
-    for i, p in enumerate(points):
-        if not any(_dominates_min(points[j], p) for j in range(len(points)) if j != i):
-            keep.append(p)
-    return np.array(keep)
+    # dominates[j, i] True if point j dominates point i (both <=, at least one <)
+    le = np.all(points[:, None, :] <= points[None, :, :], axis=2)
+    lt = np.any(points[:, None, :] < points[None, :, :], axis=2)
+    dominates = le & lt
+    np.fill_diagonal(dominates, False)
+    is_dominated = dominates.any(axis=0)
+    return points[~is_dominated]
 
 def hypervolume(points, ref_point):
     """

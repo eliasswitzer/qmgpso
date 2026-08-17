@@ -12,11 +12,11 @@ import experiment_config as cfg
 
 def load_cell(results_dir, proportion, problem_name, nt, tt, combo_id, num_runs):
     prop_tag = f"q{int(proportion * 100)}"
-    sub = os.path.join(results_dir, prop_tag, problem_name, f"nt{nt}_tt{tt}, combo_id")
+    sub = os.path.join(results_dir, prop_tag, problem_name, f"nt{nt}_tt{tt}", combo_id)
     files = sorted(glob.glob(os.path.join(sub, "seed_*.pkl")))[:num_runs]
     if not files:
         return None
-
+    
     runs = []
     for f in files:
         with open(f, "rb") as fh:
@@ -28,7 +28,7 @@ def load_cell(results_dir, proportion, problem_name, nt, tt, combo_id, num_runs)
 
     out = {}
     for pm in ["VD", "S", "MS", "acc", "NS"]:
-        out[pm] = np.array(r[pm][:min_len] for r in runs)
+        out[pm] = np.array([r[pm][:min_len] for r in runs])
 
     # derive stability
     acc = out["acc"]
@@ -80,7 +80,7 @@ def compute_wins_losses(cell_data, pm, combos, alpha=cfg.ALPHA):
                 a, b = present[i], present[j]
                 xa, xb = samples[a], samples[b]
                 try:
-                    _, p_mw = mannwhitneyu(xa, xb, alternative="two_sided")
+                    _, p_mw = mannwhitneyu(xa, xb, alternative="two-sided")
                 except ValueError:
                     continue
                 if not np.isfinite(p_mw) or p_mw >= alpha:
@@ -195,16 +195,16 @@ def main():
 
     print("Running significance tests...")
     df = compute_all_results(data, combos)
-    df.to_csv(os.path.join(args.out_dir, "long_form_wins_losses.csv", index=False))
+    df.to_csv(os.path.join(args.out_dir, "long_form_wins_losses.csv"), index=False)
 
     for proportion in proportions:
         tag = f"q{int(proportion * 100)}"
         overall_table(df, proportion).to_csv(os.path.join(args.out_dir, f"overall_{tag}.csv"), index=False)
-        by_nt_tau_table(df, proportion).to_csv(os.path.join(args.out_dir, f"overall_{tag}.csv"), index=False)
-        by_pm_table(df, proportion).to_csv(os.path.join(args.out_dir, f"overall_{tag}.csv"), index=False)
-        by_archive_strategy_table(df, proportion).to_csv(os.path.join(args.out_dir, f"overall_{tag}.csv"), index=False)
-        by_qpso_variant_table(df, proportion).to_csv(os.path.join(args.out_dir, f"overall_{tag}.csv"), index=False)
-        combo_heatmap_table(df, proportion).to_csv(os.path.join(args.out_dir, f"overall_{tag}.csv"), index=False)
+        by_nt_tau_table(df, proportion).to_csv(os.path.join(args.out_dir, f"by_nt_tau_{tag}.csv"), index=False)
+        by_pm_table(df, proportion).to_csv(os.path.join(args.out_dir, f"by_pm_{tag}.csv"), index=False)
+        by_archive_strategy_table(df, proportion).to_csv(os.path.join(args.out_dir, f"by_archive_strategy_{tag}.csv"), index=False)
+        by_qpso_variant_table(df, proportion).to_csv(os.path.join(args.out_dir, f"by_qpso_variant_{tag}.csv"), index=False)
+        combo_heatmap_table(df, proportion).to_csv(os.path.join(args.out_dir, f"combo_heatmap_{tag}.csv"), index=False)
 
         print(f"\n===Overall ranking (quantum proportion={proportion}) ===")
         print(overall_table(df, proportion).to_string(index=False))

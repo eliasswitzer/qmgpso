@@ -42,7 +42,7 @@ NT_TAU_COMBOS = [
 
 NUM_PARTICLES = 100
 NUM_ITERATIONS = 1000
-NUM_RUNS = 30 # independent runes per (per proportion, problem, nt_tau, combo) cell
+NUM_RUNS = 5 # independent runes per (per proportion, problem, nt_tau, combo) cell
 
 FIXED_PARAMS = dict(
     w=0.6,

@@ -145,7 +145,7 @@ def main():
     print(f"Cache build done in {time.time() - t0:.1f}s")
 
     tasks = build_task_list(args.results_dir, problems, nt_tau_combos, combos, proportions, args.num_runs, args.num_particles, args.num_iterations)
-    print(f"Total task cells: {len(proportions)} proportions x {len(problems)} x {len(nt_tau_combos)} nt-tau x {len(combos)} combos x {args.num_runs} runs")
+    print(f"Total task cells: {len(proportions)} proportions x {len(problems)} problems x {len(nt_tau_combos)} nt-tau x {len(combos)} combos x {args.num_runs} runs")
 
     completed, skipped = 0, 0
     t_start = time.time()

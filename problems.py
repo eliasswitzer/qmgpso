@@ -303,4 +303,244 @@ class F7(DynamicProblem):
             f2 = (1.0 - s)**H
             return np.column_stack([f1, f2])
 
-# TODO: add DIMP1, DF4, DF6, FDA5
+class FDA4(DynamicProblem):
+    """
+    A triobjective benchmark problem proposed by Farina et al., 2004
+    Type 1 Dynamic Problem (POS changes but POF remains static)
+    """
+    def __init__(self, tau_T=10, n_T=10, M=3):
+        self.M = M
+        n = M + 9
+        super().__init__(dims=n, num_objectives=M, search_bounds=[(0.0, 1.0) for _ in range(n)], is_minimization=[True] * M)
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self):
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        M = self.M
+        xI = x_clamped[:M - 1]
+        xII = x_clamped[M-1:]
+
+        G = np.abs(np.sin(0.5 * np.pi * self.t))
+        g = np.sum((xII - G)**2)
+
+        f = np.zeros(M)
+        f[0] = (1.0 + g) * np.prod(np.cos(xI * np.pi / 2.0))
+        for k in range(2, M):
+            f[k-1] = (1.0 + g) * np.prod(np.cos(xI[:M-k] * np.pi / 2.0)) * np.sin(xI[M-k] * np.pi / 2.0)
+        f[M-1] = (1.0 + g) * np.sin(xI[0] * np.pi / 2.0)
+
+        return f
+
+    def true_pareto_front(self, num_points=1000):
+        M = self.M
+        if M == 3:
+            side = int(np.ceil(np.sqrt(num_points)))
+            x1 = np.linspace(0.0, 1.0, side)
+            x2 = np.linspace(0.0, 1.0, side)
+            X1, X2 = np.meshgrid(x1, x2)
+            X1, X2 = X1.ravel(), X2.ravel()
+            f1 = np.cos(X1 * np.pi / 2.0) * np.cos(X2 * np.pi / 2.0)
+            f2 = np.cos(X1 * np.pi / 2.0) * np.sin(X2 * np.pi / 2.0)
+            f3 = np.sin(X1 * np.pi / 2.0)
+            return np.column_stack([f1, f2, f3])
+        else:
+            pts = np.abs(np.random.normal(size=(num_points, M)))
+            pts /= np.linalg.norm(pts, axis=1, keepdims=True)
+            return pts
+
+class DIMP1(DynamicProblem):
+    """
+    A benchmark problem proposed by Koo et al., 2010
+    Type I Dynamic Problem (POS changes but POF remains static)
+    """
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(9)], is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self):
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def _G(self, i):
+        n = self.dims
+        return np.sin(0.5 * np.pi * self.t + 2.0 * np.pi * (i / (n+1))**2)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        n = self.dims
+        x1 = x_clamped[0]
+
+        g = 1.0
+        for i in range(2, n+1):
+            xi = x_clamped[i-1]
+            g += (xi - self._G(i))**2
+
+        f1 = x1
+        f2 = g * (1.0 - (f1 / max(g, 1e-9))**2)
+
+        return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+        f1 = np.linspace(0.0, 1.0, num_points)
+        f2 = 1.0 - f1**2
+        return np.column_stack([f1, f2])
+
+class DF4(DynamicProblem):
+    """
+    A benchmark problem proposed by Jiang et al., 2017 (CEC2018 competition)
+    Type II Dynamic Problem (Both POS and POF change)
+    """
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(-2.0, 2.0) for _ in range(10)], is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self):
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        n = self.dims
+        x1 = x_clamped[0]
+
+        a = np.sin(0.5 * np.pi * self.t)
+        b = 1.0 + np.abs(np.cos(0.5 * np.pi * self.t))
+        H = 1.5 + a
+
+        g = 1.0
+        for i in range(2, n+1):
+            xi = x_clamped[i-1]
+            g += (xi - a * (x1**2) / i)**2
+
+        f1 = g * np.abs(x1 - a)**H
+        f2 = g * np.abs(x1 - a - b)**H
+
+        return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+        a = np.sin(0.5 * np.pi * self.t)
+        b = 1.0 + np.abs(np.cos(0.5 * np.pi * self.t))
+        H = 1.5 + a
+        f1 = np.linspace(0.0, b**H, num_points)
+        f2 = (b - f1**(1.0 / H))**H
+        return np.column_stack([f1, f2])
+
+class DF5(DynamicProblem):
+    """
+    A benchmark problem proposed by Jiang et al., 2017 (CEC2018 competition)
+    Type III Dynamic Problem (POF changes but POS remains static)
+    """
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(9)], is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self):
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        x1 = x_clamped[0]
+        x_rest = x_clamped[1:]
+
+        G = np.sin(0.5 * np.pi * self.t)
+        w_t = np.floor(10.0 * G)
+
+        g = 1.0 + np.sum((x_rest - G)**2)
+
+        f1 = g * (x1 + 0.02 * np.sin(w_t * np.pi * x1))
+        f2 = g * (1.0 - x1 + 0.02 * np.sin(w_t * np.pi * x1))
+
+        return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+        G = np.sin(0.5 * np.pi * self.t)
+        w_t = np.floor(10.0 * G)
+        x1 = np.linspace(0.0, 1.0, num_points)
+        f1 = x1 + 0.02 * np.sin(w_t * np.pi * x1)
+        f2 = 1.0 - x1 + 0.02 * np.sin(w_t * np.pi * x1)
+        return np.column_stack([f1, f2])
+
+class DF6(DynamicProblem):
+    """
+    A benchmark problem proposed by Jiang et al., 2017 (CEC2018 competition)
+    Type II Dynamic Problem (Both POS and POF change)
+    """
+    def __init__(self, tau_T=10, n_T=10):
+        super().__init__(dims=10, num_objectives=2, search_bounds=[(0.0, 1.0)] + [(-1.0, 1.0) for _ in range(9)], is_minimization=[True, True])
+
+        self.tau_T = tau_T # frequency of change
+        self.n_T = n_T # severity of change
+        self.t = 0.0 # time-step value
+
+    def has_changed(self):
+        return self.iteration > 0 and (self.iteration % self.tau_T == 0)
+
+    def handle_change(self):
+        self.t = (1.0 / self.n_T) * np.floor(self.iteration / self.tau_T)
+
+    def evaluate(self, x):
+        # Clip values to ensure they stay within bounds
+        lows = np.array([b[0] for b in self.search_bounds])
+        highs = np.array([b[1] for b in self.search_bounds])
+        x_clamped = np.clip(x, lows, highs)
+
+        x1 = x_clamped[0]
+        G = np.sin(0.5 * np.pi * self.t)
+        alpha_t = 0.2 + 2.8 * np.abs(G)
+
+        y = x_clamped[1:] - G
+        g = 1.0 + np.sum(np.abs(G) * y**2 - 10.0 * np.cos(2.0 * np.pi * y) + 10.0)
+
+        f1 = g * (x1 + 0.1 * np.sin(3.0 * np.pi * x1))**alpha_t
+        f2 = g * (1.0 - x1 + 0.1 * np.sin(3.0 * np.pi * x1))**alpha_t
+
+        return np.array([f1, f2])
+
+    def true_pareto_front(self, num_points=1000):
+        G = np.sin(0.5 * np.pi * self.t)
+        alpha_t = 0.2 + 2.8 * np.abs(G)
+        x1 = np.linspace(0.0, 1.0, num_points)
+        f1 = (x1 + 0.1 * np.sin(3.0 * np.pi * x1))**alpha_t
+        f2 = (1.0 - x1 + 0.1 * np.sin(3.0 * np.pi * x1))**alpha_t
+        return np.column_stack([f1, f2])

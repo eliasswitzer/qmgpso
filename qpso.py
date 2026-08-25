@@ -138,6 +138,17 @@ class QPSO:
         other_parents = random.sample(candidate_positions, k) if k > 0 else []
         return mutation_parent, other_parents
 
+    def _orthonormal_basis_perpendicular_to(self, direction, k, dims):
+        """Generates up to k random orthonormal vectors perpendicular to direction"""
+        k = min(k, dims - 1)
+        if k <= 0:
+            return []
+        random_matrix = np.random.normal(0, 1, size=(dims, k))
+        if np.linalg.norm(direction) > 1e-12:
+            random_matrix -= np.outer(direction, direction @ random_matrix)
+        q, _ = np.linalg.qr(random_matrix)
+        return [q[:, i] for i in range(q.shape[1])]
+
     def _parent_centric_crossover(self, mutation_parent, other_parents):
         """Generates a new quantum particle position using the parent-centric crossover (PCX) operator. Requires at least 2 total parents to define a meaningful search direction; otherwise falls back to a small Gaussian perturbvation around the mutation parent"""
         dims = len(self.search_bounds)
@@ -161,10 +172,12 @@ class QPSO:
             perpendicular_dists.append(np.linalg.norm(diff - proj))
         D_bar = float(np.mean(perpendicular_dists))
 
-        random_vector = np.random.normal(0, 1, size=dims)
-        random_perpendicular_component = random_vector - np.dot(random_vector, e_l) * e_l
+        basis = self._orthonormal_basis_perpendicular_to(e_l, len(other_parents), dims)
+        perpendicular_term = np.zeros(dims)
+        for basis_vec in basis:
+            perpendicular_term += np.random.normal(0, self.pcx_sigma2) * D_bar * basis_vec
 
-        offspring = mutation_parent + (self.pcx_sigma1 * np.random.normal(0, 1) * d) + (self.pcx_sigma2 * D_bar * random_perpendicular_component)
+        offspring = mutation_parent + (self.pcx_sigma1 * np.random.normal(0, 1) * d) + perpendicular_term
         return offspring
 
     def _sample_stable_control_parameters(self, l, max_attempts=10):
@@ -234,14 +247,14 @@ class QPSO:
                     mutation_parent, other_parents = self._get_pcx_parents(i, archive)
                     self.particles[i].position = self._parent_centric_crossover(mutation_parent, other_parents)
 
-            position = self.particles[i].get_position()
-            fitness = self.objective(position)
-            # print(f"Particle {i+1} | Fitness: {fitness:.4f} | Position: {position}")
-
             # Clip to Search Bounds
             low = np.array([b[0] for b in self.search_bounds])
             high = np.array([b[1] for b in self.search_bounds])
             self.particles[i].position = np.clip(self.particles[i].position, low, high)
+
+            position = self.particles[i].get_position()
+            fitness = self.objective(position)
+            # print(f"Particle {i+1} | Fitness: {fitness:.4f} | Position: {position}")
 
             # Update Personal Best
             if self.better_than(fitness, self.particles[i].best_fitness):

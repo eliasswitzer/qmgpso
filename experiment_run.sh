@@ -10,7 +10,7 @@ module load python/3.11
 
 source "$HOME/envs/qmgpso/bin/activate"
 
-cd "$HOME/projects/def-bmombuki/es21dq/qmgpso" || exit 1
+cd "$HOME/projects/qmgpso" || exit 1
 
 python experiment_run.py \
     --results_dir "$SCRATCH/qmgpso_results" \

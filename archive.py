@@ -51,6 +51,13 @@ class Archive:
         self.max_size = max_size
         self.positions = []
         self.fitnesses = []
+        self._crowding_cache = None # must be updated whenever positions/fitnesses change
+
+    def _get_crowding_distances(self):
+        """Calculates and caches the crowding distances for the current solutions"""
+        if self._crowding_cache is None:
+            self._crowding_cache = crowding_distance(self.fitnesses)
+        return self._crowding_cache
 
     def add_solution(self, position, fitness):
         """
@@ -81,6 +88,8 @@ class Archive:
             del self.positions[drop_idx]
             del self.fitnesses[drop_idx]
 
+        self._crowding_cache = None # contents of archive changed, invalidates current crowding distance cache
+
     def random_member(self):
         """Return the position of a random member of the archive (used in tournament selection)"""
         if not self.positions:
@@ -98,7 +107,7 @@ class Archive:
         if n == 1:
             return self.positions[0] 
         
-        distances = crowding_distance(self.fitnesses)
+        distances = self._get_crowding_distances() # cached, not recomuted per call
         k = min(tournament_size, n) # chooses 2 or 3 based on amount of solutions in archive
         candidate_indices = random.sample(range(n), k) # choose random indices
         best_idx = max(candidate_indices, key=lambda idx: distances[idx])
@@ -108,6 +117,7 @@ class Archive:
         """Clears the stored particles in the archive"""
         self.positions = []
         self.fitnesses = []
+        self._crowding_cache = None
 
     def reevaluate(self, objective):
         """Reevaluates the archive by comparing every existing stored particle for non-dominance"""

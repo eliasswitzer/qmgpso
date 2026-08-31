@@ -14,6 +14,7 @@ class QMGPSO:
             self.is_minimization = [is_minimization] * num_objectives
         else:
             self.is_minimization = list(is_minimization)
+        self._fitness_cache = {} # full fitness vector, refreshed each step, used to avoid repeat objective evaluations
 
         self.archive = Archive(is_minimization=self.is_minimization, max_size=archive_size)
 
@@ -26,7 +27,12 @@ class QMGPSO:
         self.subswarms = []
         for m in range(num_objectives):
             def obj_m(x, m=m): # Separate each objective function by passing in mini-function that returns corresponding objective value
-                return self.objective(x)[m]
+                key = x.tobytes()
+                full_fitness = self._fitness_cache.get(key) # check if fitness has already been calculated for this objective this step
+                if full_fitness is None: # if not, calculate fitness and store
+                    full_fitness = self.objective(x)
+                    self._fitness_cache[key] = full_fitness
+                return full_fitness[m]
             
             self.subswarms.append(QPSO(num_particles=particles_per_swarm[m], search_bounds=search_bounds, objective=obj_m, w=w, c1=c1, c2=c2, c3=c3, neighborhood_size=neighborhood_size, is_minimization=self.is_minimization[m], quantum_proportion=quantum_proportion, quantum_radius=quantum_radius, quantum_strategy=quantum_strategy, quantum_guide=quantum_guide, pcx_sigma1=pcx_sigma1, pcx_sigma2=pcx_sigma2, pcx_num_parents=pcx_num_parents, stability_guided=stability_guided))
 
@@ -57,11 +63,15 @@ class QMGPSO:
         
 
     def update_archive(self):
-        """Add current positions to archive"""
+        """Add current positions to archive, using cached fitnesses from step()/initialize()"""
         for subswarm in self.subswarms:
             for particle in subswarm.particles:
-                full_fitness = self.objective(particle.position)
+                key = particle.position.tobytes()
+                full_fitness = self._fitness_cache.get(key)
+                if full_fitness is None: # fallback for first call
+                    full_fitness = self.objective(particle.position)
                 self.archive.add_solution(particle.position, full_fitness)
+        self._fitness_cache.clear()
 
     def handle_change(self):
         """Applies chosen archive management approach upon environment change"""

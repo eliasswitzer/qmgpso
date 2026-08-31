@@ -127,17 +127,31 @@ class QPSO:
         num_other_needed = self.pcx_num_parents - 1
         if self.quantum_guide == "n":
             mutation_parent = self._get_neighborhood_best(i)
-            candidate_positions = [p.best_position for j, p in enumerate(self.particles) if j != i]
-        else:
-            if archive is None or len(archive) == 0:
-                return self._get_neighborhood_best(i), [] # fallback if archive is empty
-            mutation_parent = archive.random_member() if self.quantum_guide == "r" else archive.tournament_select()
-            candidate_positions = list(archive.positions)
+            n = len(self.particles)
+            k = min(num_other_needed, max(n-1, 0))
+            other_indices = set()
+            while len(other_indices) < k:
+                idx = random.randrange(n)
+                if idx != i:
+                    other_indices.add(idx)
+            other_parents = [self.particles[idx].best_position for idx in other_indices]
+            return mutation_parent, other_parents
 
-        k = min(num_other_needed, len(candidate_positions))
-        other_parents = random.sample(candidate_positions, k) if k > 0 else []
+        if archive is None or len(archive) == 0:
+            return self._get_neighborhood_best(i), []
+
+        mutation_parent = archive.random_member() if self.quantum_guide == "r" else archive.tournament_select()
+        pool_size = len(archive.positions)
+        k = min(num_other_needed, max(pool_size - 1, 0))
+        other_parents = []
+        seen = {id(mutation_parent)}
+        while len(other_parents) < k:
+            candidate = archive.positions[random.randrange(pool_size)]
+            if id(candidate) not in seen:
+                other_parents.append(candidate)
+                seen.add(id(candidate))
         return mutation_parent, other_parents
-
+            
     def _orthonormal_basis_perpendicular_to(self, direction, k, dims):
         """Generates up to k random orthonormal vectors perpendicular to direction"""
         k = min(k, dims - 1)
@@ -157,7 +171,8 @@ class QPSO:
         if not other_parents:
             return mutation_parent + np.random.normal(0, self.pcx_sigma1, size=dims)
 
-        parents = np.vstack([mutation_parent] + [np.array(p, dtype=float) for p in other_parents])
+        other_parents = np.array(other_parents, dtype=float)
+        parents = np.vstack([mutation_parent, other_parents])
         mean_position = parents.mean(axis=0)
 
         d = mutation_parent - mean_position
@@ -165,17 +180,18 @@ class QPSO:
         e_l = d / D if D > 1e-12 else np.zeros(dims) # prevent division by 0
 
         # Average perpendicular distance of the other parents to the line through mutation parent along d
-        perpendicular_dists = []
-        for p in other_parents:
-            diff = np.array(p, dtype=float) - mutation_parent
-            proj = np.dot(diff, e_l) * e_l
-            perpendicular_dists.append(np.linalg.norm(diff - proj))
-        D_bar = float(np.mean(perpendicular_dists))
+        diff = other_parents - mutation_parent
+        proj = np.outer(diff @ e_l, e_l)
+        perpendicular = diff - proj
+        D_bar = float(np.mean(np.linalg.norm(perpendicular, axis=1)))
 
         basis = self._orthonormal_basis_perpendicular_to(e_l, len(other_parents), dims)
-        perpendicular_term = np.zeros(dims)
-        for basis_vec in basis:
-            perpendicular_term += np.random.normal(0, self.pcx_sigma2) * D_bar * basis_vec
+        if basis:
+            basis_matrix = np.column_stack(basis)
+            coefficients = np.random.normal(0, self.pcx_sigma2, size=basis_matrix.shape[1])
+            perpendicular_term = basis_matrix @ (coefficients * D_bar)
+        else:
+            perpendicular_term = np.zeros(dims)
 
         offspring = mutation_parent + (self.pcx_sigma1 * np.random.normal(0, 1) * d) + perpendicular_term
         return offspring
@@ -201,7 +217,9 @@ class QPSO:
     
     def step(self, archive=None, tournament_size=3):
         """Runs one optimization step, where the algorithm first reevaluates best positions if an environment change occurs, then updates velocities and positions. Includes neutral and quantum particle updates."""
-        # Update velocities using local best
+
+        r_cloud = self._calculate_adaptive_radius(archive) if self.quantum_strategy == "adaptive" else self.quantum_radius # pre-compute r_cloud for adaptive radius QPSO so it isn't recomputed per quantum particle
+        
         for i in range(len(self.particles)):
             # Neutral particle update (standard velocity-position update)
             if self.particles[i].is_quantum == False:
@@ -234,13 +252,11 @@ class QPSO:
             # Quantum particle update
             else:
                 if self.quantum_strategy == "original":
-                    y_hat = self.global_best_position.copy()
-                    r_cloud = self.quantum_radius
+                    y_hat = self._get_neighborhood_best(i)
                     dims = len(self.search_bounds)
                     self.particles[i].position = np.random.uniform(low=(y_hat-r_cloud), high=(y_hat+r_cloud), size=dims)
                 elif self.quantum_strategy == "adaptive":
                     guide_position = self._get_quantum_guide(i, archive, tournament_size)
-                    r_cloud = self._calculate_adaptive_radius(archive)
                     dims = len(self.search_bounds)
                     self.particles[i].position = np.random.normal(loc=guide_position, scale=max(r_cloud, 1e-12), size=dims) # ensure r_cloud cannot reach 0
                 elif self.quantum_strategy == "pcx":

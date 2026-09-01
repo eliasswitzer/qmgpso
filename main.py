@@ -1,12 +1,13 @@
 import numpy as np
 import random
 import argparse
+import json
 from tqdm import tqdm
 
 from qmgpso import QMGPSO
 from problems import FDA1, ZJZ, FDA2, F5, F6, F7, DIMP1, DF4, DF5, DF6, FDA4
-from metrics import MetricsTracker
-from visualizations import plot_pareto_front, plot_archive_size, plot_pareto_front_history
+from metrics import MetricsTracker, stability_t
+from visualizations import plot_archive_size, plot_pareto_front_history
 
 # PARAMETERS
 parser = argparse.ArgumentParser()
@@ -103,7 +104,26 @@ for iteration in tqdm(range(args.iterations), desc="Optimizing"):
 
 if args.metrics:
     results = tracker.summary()
-    print(results)
+
+    stab_values = [stability_t(tracker.acc_values[i], tracker.acc_values[i-1]) for i in range(1, len(tracker.acc_values))]
+
+    raw = {
+        "problem": args.problem,
+        "nt": args.n_t,
+        "tt": args.tau_t,
+        "seed": args.seed,
+        "quantum_strategy": args.quantum_strategy,
+        "quantum_guide": args.quantum_guide,
+        "archive_strategy": args.archive_strategy,
+        "VD": tracker.vd_values,
+        "S": tracker.s_values,
+        "MS": tracker.ms_values,
+        "acc": tracker.acc_values,
+        "stab": stab_values,
+        "NS": tracker.ns_values
+    }
+
+    print("RAW_METRICS_JSON:" + json.dumps(raw))
 
 # Show plots
 if args.plot_archive_size:

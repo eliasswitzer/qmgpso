@@ -14,14 +14,7 @@ module purge
 module load python/3.11 scipy-stack/2024a
 
 VENV="$HOME/envs/qmgpso"
-if [ ! -d "$VENV" ]; then
-    python -m venv "$VENV"
-    source "$VENV/bin/activate"
-    pip install --no-index --upgrade pip
-    pip install --no-index numpy tqdm matplotlib scipy
-else
-    source "$VENV/bin/activate"
-fi
+source "$VENV/bin/activate"
 
 export MPLBACKEND=Agg
 

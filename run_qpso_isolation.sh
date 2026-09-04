@@ -21,7 +21,7 @@ export MPLBACKEND=Agg
 cd "$SLURM_SUBMIT_DIR"
 
 RESULTS_ROOT=results/qpso_isolation_experiment
-mkdir -p "$RESULTS_DIR" logs
+mkdir -p "$RESULTS_ROOT" logs
 
 # fallback to temp dir if script is ever run outside SLURM for local testing
 : "${SLURM_TMPDIR:=$(mktemp -d)}"
@@ -34,10 +34,10 @@ TT=(10 25 50 10 10)
 QSTRAT=(adaptive adaptive adaptive pcx pcx pcx)
 QGUIDE=(n r t n r t)
 
-QPROP = (0.5, 0.1)
-QPLABEL = (50, 10)
+QPROP = (0.5 0.1)
+QPLABEL = (50 10)
 
-ARCHIVE="re"
+ARCH="re"
 
 NUM_RUNS=30
 ITERATIONS=1000

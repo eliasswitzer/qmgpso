@@ -34,8 +34,8 @@ TT=(10 25 50 10 10)
 QSTRAT=(adaptive adaptive adaptive pcx pcx pcx)
 QGUIDE=(n r t n r t)
 
-QPROP = (0.5 0.1)
-QPLABEL = (50 10)
+QPROP=(0.5 0.1)
+QPLABEL=(50 10)
 
 ARCH="re"
 

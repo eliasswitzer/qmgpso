@@ -258,7 +258,8 @@ class QPSO:
                 elif self.quantum_strategy == "adaptive":
                     guide_position = self._get_quantum_guide(i, archive, tournament_size)
                     dims = len(self.search_bounds)
-                    self.particles[i].position = np.random.normal(loc=guide_position, scale=max(r_cloud, 1e-12), size=dims) # ensure r_cloud cannot reach 0
+                    r = max(r_cloud, 1e-12) # ensure r_cloud cannot reach 0
+                    self.particles[i].position = np.random.uniform(low=guide_position-r, high=guide_position+r, size=dims)
                 elif self.quantum_strategy == "pcx":
                     mutation_parent, other_parents = self._get_pcx_parents(i, archive)
                     self.particles[i].position = self._parent_centric_crossover(mutation_parent, other_parents)

@@ -134,13 +134,12 @@ def hypervolume(points, ref_point):
     points = points[order]
 
     hv = 0.0
-    prev_bound = ref_point[-1]
     for i in range(len(points)):
-        height = prev_bound - points[i, -1]
+        upper = points[i + 1, -1] if i + 1 < len(points) else ref_point[-1]
+        upper = min(upper, ref_point[-1])
+        height = upper - points[i, -1]
         if height > 0:
-            sub_points = points[i:, :-1]
-            hv += height * hypervolume(sub_points, ref_point[:-1])
-        prev_bound = points[i, -1]
+            hv += height * hypervolume(points[:i+1, :-1], ref_point[:-1])
 
     return float(hv)
 

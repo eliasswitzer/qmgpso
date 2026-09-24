@@ -26,7 +26,7 @@ mkdir -p "$RESULTS_ROOT" logs
 # fallback to temp dir if script is ever run outside SLURM for local testing
 : "${SLURM_TMPDIR:=$(mktemp -d)}"
 
-PROBLEMS=(FDA1 ZJZ FDA2 F5 F6 F7 DIMP1 DF4 DF5 DF6 FDA4)
+PROBLEMS=(FDA1 ZJZ FDA2Cam FDA3Cam FDA4 FDA5 F5 F6 F7 DIMP1 DIMP2 DF4 DF5 DF6 DF7 DF8 DF9 dMOP1 dMOP2 dMOP3 dMOP3mod HE1 HE2)
 
 NT=(10 10 10 1 20)
 TT=(10 25 50 10 10)

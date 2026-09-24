@@ -5,7 +5,7 @@ import json
 from tqdm import tqdm
 
 from qmgpso import QMGPSO
-from problems import FDA1, ZJZ, FDA2, F5, F6, F7, DIMP1, DF4, DF5, DF6, FDA4
+from problems import FDA1, ZJZ, FDA2Cam, FDA3Cam, FDA4, FDA5, F5, F6, F7, DIMP1, DIMP2, DF4, DF5, DF6, DF7, DF8, DF9, dMOP1, dMOP2, dMOP3, dMOP3mod, HE1, HE2
 from metrics import MetricsTracker, stability_t
 from visualizations import plot_archive_size, plot_pareto_front_history
 
@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--seed', metavar="seed", type=int, required=True, help="The random seed for reproducibility.")
 
 # Problem Parameters
-parser.add_argument('-p', '--problem', metavar="problem", type=str, required=True, choices=["FDA1", "ZJZ", "FDA2", "F5", "F6", "F7", "DIMP1", "DF4", "DF5", "DF6", "FDA4"], help="The dynamic multi-objective benchmark problem for optimization.")
+parser.add_argument('-p', '--problem', metavar="problem", type=str, required=True, choices=["FDA1", "ZJZ", "FDA2Cam", "FDA3Cam", "FDA4", "FDA5", "F5", "F6", "F7", "DIMP1", "DIMP2", "DF4", "DF5", "DF6", "DF7", "DF8", "DF9", "dMOP1", "dMOP2", "dMOP3", "dMOP3mod", "HE1", "HE2"], help="The dynamic multi-objective benchmark problem for optimization.")
 parser.add_argument("-i", "--iterations", metavar="iterations", type=int, required=True, help="The number of iterations to run the PSO algorithm/problem optimization for.")
 parser.add_argument('-tt', "--tau_t", metavar="tau_t", type=int, required=True, help="The change frequency parameter. i.e. how many iterations the algorithm will will run before the environment changes.")
 parser.add_argument('-nt', "--n_t", metavar="n_t", type=int, required=True, help="The change severity parameter. i.e. how much the environment changes by.")
@@ -63,7 +63,13 @@ if args.problem == "FDA1":
 elif args.problem == "ZJZ":
     problem = ZJZ(tau_T=args.tau_t , n_T=args.n_t)
 elif args.problem == "FDA2":
-    problem = FDA2(tau_T=args.tau_t , n_T=args.n_t)
+    problem = FDA2Cam(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "FDA3Cam":
+    problem = FDA3Cam(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "FDA4":
+    problem = FDA4(tau_T=args.tau_t , n_T=args.n_t, M=3)
+elif args.problem == "FDA5":
+    problem = FDA5(tau_T=args.tau_t , n_T=args.n_t, M=3)
 elif args.problem == "F5":
     problem = F5(tau_T=args.tau_t , n_T=args.n_t)
 elif args.problem == "F6":
@@ -72,14 +78,32 @@ elif args.problem == "F7":
     problem = F7(tau_T=args.tau_t , n_T=args.n_t)
 elif args.problem == "DIMP1":
     problem = DIMP1(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "DIMP2":
+    problem = DIMP2(tau_T=args.tau_t , n_T=args.n_t)
 elif args.problem == "DF4":
     problem = DF4(tau_T=args.tau_t , n_T=args.n_t)
 elif args.problem == "DF5":
     problem = DF5(tau_T=args.tau_t , n_T=args.n_t)
 elif args.problem == "DF6":
     problem = DF6(tau_T=args.tau_t , n_T=args.n_t)
-elif args.problem == "FDA4":
-    problem = FDA4(tau_T=args.tau_t , n_T=args.n_t, M=3)
+elif args.problem == "DF7":
+    problem = DF7(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "DF8":
+    problem = DF8(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "DF9":
+    problem = DF9(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "dMOP1":
+    problem = dMOP1(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "dMOP2":
+    problem = dMOP2(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "dMOP3":
+    problem = dMOP3(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "dMOP3mod":
+    problem = dMOP3mod(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "HE1":
+    problem = HE1(tau_T=args.tau_t , n_T=args.n_t)
+elif args.problem == "HE2":
+    problem = HE2(tau_T=args.tau_t , n_T=args.n_t)
 
 
 qmgpso = QMGPSO(num_particles=args.particles, search_bounds=problem.search_bounds, objective=problem.evaluate, num_objectives=problem.num_objectives, is_minimization=problem.is_minimization, w=args.w, c1=args.c1, c2=args.c2, c3=args.c3, neighborhood_size=args.neighborhood_size, quantum_proportion=args.quantum_proportion, quantum_radius=args.quantum_radius, quantum_strategy=args.quantum_strategy, quantum_guide=args.quantum_guide, pcx_sigma1=args.pcx_sigma1, pcx_sigma2=args.pcx_sigma2, pcx_num_parents=args.pcx_num_parents, archive_strategy=args.archive_strategy, archive_size=args.archive_size, stability_guided=args.stability_guided)
@@ -133,5 +157,3 @@ if args.plot_true_pareto:
     plot_pareto_front_history(qmgpso.history, true_history=true_history, num_snapshots=1000, tau_T=args.tau_t)
 else:
     plot_pareto_front_history(qmgpso.history, num_snapshots=1000, tau_T=args.tau_t)
-
-# TODO: More VISUALS (pareto set visual) 
